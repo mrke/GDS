@@ -15,10 +15,20 @@ weather_obs[,2:10]<-as.numeric(unlist(weather_obs[,2:10]))
 weather_obs[,12]<-as.numeric(unlist(weather_obs[,12]))
 weather_obs[,14:16]<-as.numeric(unlist(weather_obs[,14:16]))
 weather_obs[,18:19]<-as.numeric(unlist(weather_obs[,18:19]))
+rain<-c(0,weather_obs[2:nrow(weather_obs),19]-weather_obs[1:(nrow(weather_obs)-1),19])
+rain[rain<0]<-0
+weather_obs$RAIN<-rain
 
-plot(weather_obs$AirTemp_C_Min~weather_obs$TIMESTAMP,type='l')
-plot(weather_obs$AirTemp_C_Max~weather_obs$TIMESTAMP,type='l')
-plot(weather_obs$RainYearly_mm~weather_obs$TIMESTAMP,type='h')
-plot(weather_obs$Solar_Avg~weather_obs$TIMESTAMP,type='l')
-plot(weather_obs$Barometer_KPa~weather_obs$TIMESTAMP,type='l')
+plot_weather_obs<-subset(weather_obs,weather_obs$TIMESTAMP>as.POSIXct("2014-03-01 00:00:00") & weather_obs$TIMESTAMP<as.POSIXct("2014-04-15 00:00:00"))
+#plot_weather_obs<-weather_obs
+plot(plot_weather_obs$RAIN~plot_weather_obs$TIMESTAMP,type='h',col='blue')
+plot(plot_weather_obs$AirTemp_C_Min~plot_weather_obs$TIMESTAMP,type='l')
+points(plot_weather_obs$RAIN~plot_weather_obs$TIMESTAMP,type='h',col='blue')
+plot(plot_weather_obs$AirTemp_C_Max~plot_weather_obs$TIMESTAMP,type='l')
+plot(plot_weather_obs$Solar_Avg~plot_weather_obs$TIMESTAMP,type='l')
+points(plot_weather_obs$RAIN*100~plot_weather_obs$TIMESTAMP,type='h',col='blue')
+plot(plot_weather_obs$Barometer_KPa~plot_weather_obs$TIMESTAMP,type='l')
+plot(plot_weather_obs$RH_Avg~plot_weather_obs$TIMESTAMP,type='l')
+plot(plot_weather_obs$ETo~plot_weather_obs$TIMESTAMP,type='l')
+plot(plot_weather_obs$WindSpeed_ms_Avg~plot_weather_obs$TIMESTAMP,type='l')
 
