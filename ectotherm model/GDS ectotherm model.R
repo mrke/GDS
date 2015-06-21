@@ -1,6 +1,6 @@
 ############# ectotherm model parameters ################################
 
-microin<-"/git/Niveoscincus/microclimates/Orford 2000_2013/" # subfolder containing the microclimate input data
+microin<-"/git/GDS/microclimate/" # subfolder containing the microclimate input data
 #microin<-"/git/Niveoscincus/microclimates/Central Plateau 2000_2013/" # subfolder containing the microclimate input data
 project.dir<-getwd() # save initial working directory
 # simulation settings
@@ -40,8 +40,8 @@ shape_c<-0.6666666667
 Flshcond<-0.5 # W/mC, thermal conductivity of flesh (range: 0.412-2.8 )
 Spheat<-4185 # J/(kg-K), specific heat of flesh
 Andens<-1000 # kg/m3, density of flesh
-ABSMAX<-0.9 # ** decimal %, maximum solar absorptivity (Christian, K.A., Bedford, G.S. & Shannahan, S.T. (1996) Solar absorptance of some Australian lizards and its relationship to temperature. Australian Journal of Zoology, 44.)
-ABSMIN<-0.9 # ** decimal %, maximum solar absorptivity (Christian, K.A., Bedford, G.S. & Shannahan, S.T. (1996) Solar absorptance of some Australian lizards and its relationship to temperature. Australian Journal of Zoology, 44.)
+ABSMAX<-0.8 # ** decimal %, maximum solar absorptivity
+ABSMIN<-0.8 # ** decimal %, maximum solar absorptivity
 EMISAN<-1. # emissivity of animal
 ptcond<-0.1 # decimal % of surface contacting the substrate
 FATOSK<-0.4 # configuration factor to sky
@@ -59,15 +59,15 @@ phimax<- phi # degrees, max wing angle (90 = vertical relative to body)
 phimin<- phi # degrees, min wing angle (90 = vertical relative to body
 
 # physiological traits
-TMAXPR<-34.2 # degrees C, voluntary thermal maximum (upper body temperature for foraging and also burrow depth selection) # based on Yuni's field data for lowland site across all seasons
-TMINPR<-29.1 # degrees C, voluntary thermal minimum (lower body temperature for foraging) # based on Yuni's field data for lowland site across all seasons
-TBASK<-TMINPR#5 # degrees C, minimum basking temperature 
-TEMERGE<-10 # degrees C, temperature at which animal will move to a basking site, educated guess
-ctmax<-41.78  # degrees C, critical thermal maximum (animal will die if ctkill = 1 and this threshold is exceeded)
-ctmin<-4.27 # degrees C, critical thermal minimum (used by program to determine depth selected when inactive and burrowing) # Mandy's data
+TMAXPR<-35.0 # degrees C, voluntary thermal maximum (upper body temperature for foraging and also burrow depth selection) # 
+TMINPR<-20.0 # degrees C, voluntary thermal minimum (lower body temperature for foraging) # 
+TBASK<-20.0#5 # degrees C, minimum basking temperature 
+TEMERGE<-15 # degrees C, temperature at which animal will move to a basking site, educated guess
+ctmax<-43.0  # degrees C, critical thermal maximum (animal will die if ctkill = 1 and this threshold is exceeded)
+ctmin<-3.5 # degrees C, critical thermal minimum (used by program to determine depth selected when inactive and burrowing) #
 ctminthresh<-12 #number of consecutive hours below CTmin that leads to death
 ctkill<-0 #if 1, animal dies when it hits critical thermal limits
-TPREF<-32.74 # preferred body temperature (animal will attempt to regulate as close to this value as possible) # mean of Yuni's Orford data across all seasons
+TPREF<-33.0 # preferred body temperature (animal will attempt to regulate as close to this value as possible) #
 DELTAR<-0.1 # degrees C, temperature difference between expired and inspired air
 skinwet<-0.0 # estimated from data in Bently 1959 at 23 degrees and 34.5 degrees #0.2#0.35 # %, of surface area acting like a free water surface (e.g. most frogs are 100% wet, many lizards less than 5% wet)
 extref<-20. # %, oxygen extraction efficiency (need to check, but based on 35 deg C for a number of reptiles, from Perry, S.F., 1992. Gas exchange strategies in reptiles and the origin of the avian lung. In: Wood, S.C., Weber, R.E., Hargens, A.R., Millard, R.W. (Eds.), Physiological Adaptations in Vertebrates: Respiration, Circulation, andMetabo -  lism. Marcel Dekker, Inc., New York, pp. 149-167.)
@@ -79,13 +79,13 @@ raindrink<-0. # daily rainfall (mm) required for animal to rehydrate from drinki
 gutfill<-101 # % gut fill at which satiation occurs - if greater than 100%, animal always tries to forage
 
 # behavioural traits
-dayact<-1 # diurnal activity allowed (1) or not (0)?
-nocturn<-0 # nocturnal activity allowed (1) or not (0)?
-crepus<-0 # crepuscular activity allowed (1) or not (0)?
+dayact<-0 # diurnal activity allowed (1) or not (0)?
+nocturn<-1 # nocturnal activity allowed (1) or not (0)?
+crepus<-1 # crepuscular activity allowed (1) or not (0)?
 burrow<-1 # shelter in burrow allowed (1) or not (0)?
 shdburrow<-0 #
-mindepth<-3 # minimum depth (soil node) to which animal can retreat if burrowing
-maxdepth<-10 # maximum depth (soil node) to which animal can retreat if burrowing
+mindepth<-5 # minimum depth (soil node) to which animal can retreat if burrowing
+maxdepth<-9 # maximum depth (soil node) to which animal can retreat if burrowing
 CkGrShad<-1 # shade seeking allowed (1) or not (0)?
 climb<-0 # climbing to seek cooler habitats allowed (1) or not (0)?
 fosorial<-0 # fossorial activity (1) or not (0)
@@ -110,19 +110,19 @@ wetmod<-0 # run the wetland model?
 soilmoisture<-0 # run the soil moisture model? (models near-surface soil moisture rather than a pond as a function of field capacity and wilting point)
 
 # which energy budget model to use? 
-DEB<-1 # run the DEB model (1) or just heat balance, using allometric respiration below (0)
+DEB<-0 # run the DEB model (1) or just heat balance, using allometric respiration below (0)
 
 # parameters for allometric model of respiration, for use in heat budget when DEB model is not
 # run so that metabolic heat generation and respiratory water loss can be calculated.
 # Metabolic rate, MR (ml O2/h, STP) at a given body mass (g) and body temperature, Tb (deg C)
 # MR=MR1*M^MR2*10^(MR3*Tb) based on Eq. 2 from Andrews & Pough 1985. Physiol. Zool. 58:214-231
-amass<-4. # g, mass of animal (used if the 'monthly' option is checked and DEB model is thus off)
+amass<-200. # g, mass of animal (used if the 'monthly' option is checked and DEB model is thus off)
 MR_1<-0.013
 MR_2<-0.8
 MR_3<-0.038
 
 ################### Dynamic Energy Budget Model Parameters ################
-debpars<-as.data.frame(read.csv('DEB models/Niveoscincus_ocellatus_lowland/DEB_pars_Niveoscincus_ocellatus_lowlands.csv',header=FALSE))$V1
+debpars<-as.data.frame(read.csv('DEB model/DEB_pars_Liopholis_kintorei.csv',header=FALSE))$V1
 fract<-1
 f<-1.
 MsM<-186.03*6. # J/cm3 produces a stomach volume of 5.3 cm3/100 g, as measured for Disosaurus dorsalis, adjusted for Egernia cunninghami
@@ -224,7 +224,7 @@ nP<-c(1,1.8,0.5,.15) # composition of product/faeces (atoms per carbon atoms for
 N_waste<-c(1,4/5,3/5,4/5) # chemical formula for nitrogenous waste product, CHON, e.g. Urea c(0,3,0,1), Uric acid c(5/5,4,3,4)
 
 # breeding life history
-clutchsize<-5. # clutch size, if using regression below, make this the max clutch size
+clutchsize<-6. # clutch size, if using regression below, make this the max clutch size
 clutch_ab<-c(2.5,12.5) # paramters for relationship between length and clutch size: clutch size = a*SVL-b, make zero if fixed clutch size
 viviparous<-1 # 1=yes, 0=no
 batch<-1 # invoke Pequerie et al.'s batch laying model?
@@ -338,46 +338,22 @@ colnames(rainfall)<-c("dates","rainfall")
 ############### plot results ######################
 library(lattice)
 
-# first plot observed vs predicted SVL vs. time
-plot(debout$SVL~debout$dates,type='l',ylim=c(20,75)) # predicted SVL vs time
-
-Growth<-read.csv('life history/N_ocellatus_Orford_growth.csv') # read in first dataset
-Growth$date<-as.POSIXct(Growth$date,format='%d/%m/%Y') # convert dates
-points(Growth$SVL~Growth$date,col='red') # plot results
-
-Growth_skeleto<-read.csv('life history/N_ocellatus_Orford_growth_skeleto.csv') # bring in second dataset
-Growth_skeleto<-subset(Growth_skeleto,site=='Orford' & sex!='m') # choose site and sex
-#Growth_skeleto<-subset(Growth_skeleto,site=='CP' & sex!='m') # choose site and sex
-Growth_skeleto$date<-as.POSIXct(Growth_skeleto$date,format='%d/%m/%Y') # convert dates
-points(Growth_skeleto$svl~Growth_skeleto$date,col='blue') # plot results
-
 # plot activity windows
 plotenviron<-subset(environ,YEAR<3) #choose time period
 forage<-subset(plotenviron,ACT==2) # get foraging times
 bask<-subset(plotenviron,ACT==1) # get basking times
 night<-subset(metout,ZEN==90) # get night period
-with(forage,plot((TIME-1)~DAY,pch=15,cex=.5,col='blue',ylab='hour of day',ylim=c(0,23),xlab='day of year')) # plot foraging
-with(bask,points((TIME-1)~DAY,pch=15,cex=.5,col='grey')) # plot basking
+with(forage,plot((TIME-1)~DAY,pch=15,cex=.5,col='white',ylab='hour of day',ylim=c(0,23),xlab='day of year')) # plot foraging
 with(night,points(TIME/60~JULDAY,pch=15,cex=.5)) # plot night hours
+with(forage,points((TIME-1)~DAY,pch=15,cex=.5,col='blue',ylab='hour of day',ylim=c(0,23),xlab='day of year')) # plot foraging
+with(bask,points((TIME-1)~DAY,pch=15,cex=.5,col='grey')) # plot basking
 actstart<-subset(plotenviron,as.character(plotenviron$dates,format='%d/%m')=="15/09" | as.character(plotenviron$dates,format='%d/%m')=="15/04") # get 15th Sept and 15th April
 actstart<-subset(actstart,as.character(actstart$dates,format='%H')=="00") # get midnight
 actstart<-subset(actstart,JULDAY>0) # get rid of years after death
 abline(v=actstart$DAY,col='grey',lty=2) # plot 15th September and 15th April for reference
 
-# plot mass and reproduction phenology
-plotdebout<-subset(debout,as.numeric(format(dates, "%Y"))<1994) # use this if you want to subset particular years
-plotdebout<-debout # this just keeps it to all years
-year_vals<-subset(plotdebout,as.character(dates,format='%d/%m')=="01/01")
-year_vals<-subset(year_vals,as.character(year_vals$dates,format='%H')=="00") # get midnight
-plot(plotdebout$WETMASS~plotdebout$dates,type='l', ylab="wet mass, g",xlab="date") # plot wet mass as a function of date
-abline(v=year_vals$dates,col='grey',lty=2) # add lines to show beginning of each year
-plot(debout$CUMBATCH/1000~debout$dates,type='l', ylab='total energy, kJ',xlab="date") # plot energy in batch buffer (yolking eggs)
-points(debout$CUMREPRO/1000~debout$dates,type='l',col='red') # plot energy in the reproduction buffer (captial for egg production, but not currently transformed to eggs)
-abline(v=year_vals$dates,col='grey',lty=2) # add lines to show beginning of each year
-plot(debout$V_baby~debout$dates,type='l', ylab='embryo structure (cm3)',xlab="date") # plot embryo development (volume of structure)
-
 # plot thermoregulation
-subdate<-subset(environ, format(environ$dates,"%y/%m")=="01/07") # use this to subset a particular year and month
+subdate<-subset(environ, format(environ$dates,"%y/%m")=="13/11") # use this to subset a particular year and month
 #subdate<-environ # just use the whole data set
 with(subdate, plot(TC~dates,ylim=c(-15,50),type = "l",col='blue')) # plot Tb
 with(subdate, points(ACT*5~dates,type = "l",col='pink')) # plot activity
@@ -391,6 +367,23 @@ abline(TMINPR,0,lty=2,col='blue',lwd=2)
 abline(TBASK,0,lty=2,col='pink',lwd=2)
 abline(ctmin,0,lty=2,col='cyan',lwd=2)
 abline(TPREF,0,lty=2,col='orange',lwd=2)
+
+
+
+
+# plot mass and reproduction phenology
+plotdebout<-subset(debout,as.numeric(format(dates, "%Y"))<2014) # use this if you want to subset particular years
+plotdebout<-debout # this just keeps it to all years
+year_vals<-subset(plotdebout,as.character(dates,format='%d/%m')=="01/01")
+year_vals<-subset(year_vals,as.character(year_vals$dates,format='%H')=="00") # get midnight
+plot(plotdebout$WETMASS~plotdebout$dates,type='l', ylab="wet mass, g",xlab="date") # plot wet mass as a function of date
+abline(v=year_vals$dates,col='grey',lty=2) # add lines to show beginning of each year
+plot(debout$CUMBATCH/1000~debout$dates,type='l', ylab='total energy, kJ',xlab="date") # plot energy in batch buffer (yolking eggs)
+points(debout$CUMREPRO/1000~debout$dates,type='l',col='red') # plot energy in the reproduction buffer (captial for egg production, but not currently transformed to eggs)
+abline(v=year_vals$dates,col='grey',lty=2) # add lines to show beginning of each year
+plot(debout$V_baby~debout$dates,type='l', ylab='embryo structure (cm3)',xlab="date") # plot embryo development (volume of structure)
+
+
 
 # code to get constant temperature equivalent (CTE) based on Arrhenius temperature function
 # !!!!!!!!!!!! run this with DEB<-0 on line 112 above so that DEB model isn't running !!!!!!!!
