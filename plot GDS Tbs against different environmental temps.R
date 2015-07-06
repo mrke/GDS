@@ -3,6 +3,48 @@
 # load the packages needed for this session
 library(stringr)
 
+# lizard to do
+lizard<-8
+
+#  [1] "01-Jan-14 1044_data-logger_S_B22.txt"  
+#  [2] "01-Jan-14 1049_data-logger_A_B13.txt"  
+#  [3] "01-Jan-14 1053_data-logger_X_B56.txt"  
+#  [4] "01-Jan-14 1057_datalogger_K_B21.txt"   
+#  [5] "01-Jan-14 1100_data-logger_D_B44.txt"  
+#  [6] "01-Jan-14 1103_datalogger_Q_B46.txt"   
+#  [7] "01-Jan-14 1104_data-logger_B_B40.txt"  
+#  [8] "01-Jan-14 1111_datalogger_B36_woma.txt"
+#  [9] "09-Dec-13 0941_data-logger_I.txt"      
+# [10] "10-Dec-13 1421_data-logger_J.txt"      
+# [11] "10-Dec-13 1424_data-logger_C.txt"      
+# [12] "11-Dec-13 1152_data-logger_P_B32.txt"  
+# [13] "11-Dec-13 1217_data-logger_H B30.txt"  
+# [14] "13-Dec-13 0550_data-logger_Z_B10.txt"  
+# [15] "13-Nov-13 0548_data-logger_Z_B47.txt"  
+# [16] "14-Dec-13 1133_data-loggers_G_B28.txt" 
+# [17] "15-Dec-13 0615_data-logger_M_B41.txt"  
+# [18] "21-Apr-14 1202_B_Backup.txt"           
+# [19] "30-Nov-13 1020_data-logger_L.txt"      
+# [20] "31-Dec-13 1741_data-logger_E_B45.txt"  
+# [21] "31-Dec-13 1744_data-logger_T_B81.txt"  
+
+# time period to plot
+timestart<-"2013-10-21 00:00:00"
+timefinish<-"2013-10-27 00:00:00"
+
+# burrow site to plot
+burrow_site<-1
+
+# [1] DL 3 GDS 15"
+# [2] GDS 13"     
+# [3] GDS 16"     
+# [4] GDS 18"     
+# [5] GDS 22 T"   
+# [6] GDS 9"
+
+soil_site<-"C1" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
+copper_site<-"C1" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
+
 # read in weatherhawk data
 tzone<-paste("Etc/GMT-",10,sep="") # doing it this way ignores daylight savings!
 weather_obs<-read.csv('Field Data//weatherhawk_10min.csv')
@@ -17,17 +59,36 @@ GDS.files<-list.files(GDS.folder)
 GDS.files<-GDS.files[grep(GDS.files,pattern = ".txt")]
 GDS.files<-GDS.files[-grep(GDS.files,pattern = "backup")] # remove backups
 
-# read and plot all data for first skink
-i<-8
-  GDS.data<-read.csv(paste(GDS.folder,GDS.files[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
-  colnames(GDS.data)<-c('date_time','temperature') #give the columns names
-  GDS.title<-GDS.files[i]
-  GDS.title<-str_replace_all(GDS.title,'.txt','') #get rid of ".txt"
+# read and plot all skink data 
 
-  GDS.data$temperature<-type.convert(sub("\\p{So}C", "", GDS.data$temperature, perl = TRUE)) # trick to get rid of degree C symbol
-  GDS.data$date_time<-as.POSIXct(GDS.data$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
-  with(GDS.data,plot(temperature~date_time,type='l',main=GDS.title,ylim=c(10,70))) # plot the data
+# for(i in 1:length(GDS.files)){
+#   GDS.data<-read.csv(paste(GDS.folder,GDS.files[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+#   colnames(GDS.data)<-c('date_time','temperature') #give the columns names
+#   GDS.title<-GDS.files[i]
+#   GDS.title<-str_replace_all(GDS.title,'.txt','') #get rid of ".txt"
+# 
+#   GDS.data$temperature<-type.convert(sub("\\p{So}C", "", GDS.data$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+#   GDS.data$date_time<-as.POSIXct(GDS.data$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+#   with(GDS.data,plot(temperature~date_time,type='l',main=GDS.title,ylim=c(10,70))) # plot the data
+# points(weather_obs$RAIN+10~weather_obs$TIMESTAMP,type='h',col='blue')
+# }
 
+# select a particular skink
+#i<-3
+GDS.data<-read.csv(paste(GDS.folder,GDS.files[lizard],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+colnames(GDS.data)<-c('date_time','temperature') #give the columns names
+GDS.title<-GDS.files[lizard]
+GDS.title<-str_replace_all(GDS.title,'.txt','') #get rid of ".txt"
+
+GDS.data$temperature<-type.convert(sub("\\p{So}C", "", GDS.data$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+GDS.data$date_time<-as.POSIXct(GDS.data$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+with(GDS.data,plot(temperature~date_time,type='l',main=GDS.title,ylim=c(10,70))) # plot the data
+
+############# choose time period to plot in the line below #############
+GDS.data<-subset(GDS.data,GDS.data$date_time>as.POSIXct(timestart,tz=tzone) & GDS.data$date_time<as.POSIXct(timefinish,tz=tzone))
+with(GDS.data,plot(temperature~date_time,type='l',main=GDS.title,ylim=c(10,70))) # plot the data
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+points(weather_obs$RAIN+10~weather_obs$TIMESTAMP,type='h',col='blue')
 
 ################################### burrow temperatures #####################################################################
 
@@ -35,8 +96,8 @@ burrow.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mi
 burrow.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/burrow data/"
 burrow.folders<-list.dirs(burrow.folder)[-1]
 
-m<-5 # choose burrow folder
-burrow.files<-list.files(burrow.folders[m])
+#m<-5 # choose burrow folder
+burrow.files<-list.files(burrow.folders[burrow_site])
 burrow.files<-burrow.files[grep(burrow.files,pattern = ".txt")]
 burrow.files<-burrow.files[-grep(burrow.files,pattern = "backup")] # remove backups
 
@@ -63,7 +124,8 @@ burrow.surf<-burrow.surf[order(burrow.surf$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,burrow.title),ylim=c(10,70))) # plot the data
   with(burrow.surf,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### burrow mid #####################################################################
 
 burrow.files.mid<-burrow.files[grep(burrow.files,pattern = "mid")] # get mid files
@@ -87,7 +149,8 @@ burrow.mid<-burrow.mid[order(burrow.mid$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,burrow.title),ylim=c(10,70))) # plot the data
   with(burrow.mid,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### burrow deep #####################################################################
 
 burrow.files.deep<-burrow.files[grep(burrow.files,pattern = "deep")] # get deep files
@@ -111,7 +174,8 @@ burrow.deep<-burrow.deep[order(burrow.deep$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,burrow.title),ylim=c(10,70))) # plot the data
   with(burrow.deep,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### soil temperatures #####################################################################
 
 soil.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Soil Profiles/"
@@ -126,7 +190,7 @@ depths<-c("_surface","_5cm","_15cm","_30cm","_50cm","_1m")
 
 # read in and plot results per depth for a given site and date
 
-soil.files.subset<-soil.files[grep(soil.files,pattern = "C1")] # specify site
+soil.files.subset<-soil.files[grep(soil.files,pattern = soil_site)] # specify site
 
 ################################### soil temp surface #####################################################################
 
@@ -150,7 +214,8 @@ soil.surfaces<-soil.surfaces[order(soil.surfaces$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,soil.title),ylim=c(10,70))) # plot the data
   with(soil.surfaces,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### soil temp 5cm #####################################################################
 
 soil.files.5cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[2])]
@@ -173,7 +238,8 @@ soil.5cms<-soil.5cms[order(soil.5cms$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,soil.title),ylim=c(10,70))) # plot the data
   with(soil.5cms,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### soil temp 15cm #####################################################################
 
 soil.files.15cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[3])]
@@ -196,7 +262,8 @@ soil.15cms<-soil.15cms[order(soil.15cms$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,soil.title),ylim=c(10,70))) # plot the data
   with(soil.15cms,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### soil temp 30cm#####################################################################
 
 soil.files.30cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[4])]
@@ -219,7 +286,8 @@ soil.30cms<-soil.30cms[order(soil.30cms$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,soil.title),ylim=c(10,70))) # plot the data
   with(soil.30cms,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### soil temp 50cm#####################################################################
 
 soil.files.50cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[5])]
@@ -242,7 +310,8 @@ soil.50cms<-soil.50cms[order(soil.50cms$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,soil.title),ylim=c(10,70))) # plot the data
   with(soil.50cms,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### soil temp 1m#####################################################################
 
 soil.files.1m<-soil.files.subset[grep(soil.files.subset,pattern = depths[6])]
@@ -265,16 +334,16 @@ soil.1ms<-soil.1ms[order(soil.1ms$date_time),]
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,soil.title),ylim=c(10,70))) # plot the data
   with(soil.1ms,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### adult copper model full shade #####################################################################
-
 adult.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/adult models/"
 adult.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Adult models/"
 adult.folders<-list.dirs(adult.folder)[-1]
 adult.folders.fullshade<-adult.folders[grep(adult.folders,pattern = "full shade")]
 adult.files.fullshade<-list.files(adult.folders.fullshade)
 adult.files.fullshade<-adult.files.fullshade[grep(adult.files.fullshade,pattern = ".txt")]
-adult.files.fullshade<-adult.files.fullshade[grep(adult.files.fullshade,pattern = "C1")]
+adult.files.fullshade<-adult.files.fullshade[grep(adult.files.fullshade,pattern = copper_site)]
 
 # read and plot all data
 
@@ -289,14 +358,15 @@ for(i in 1:length(adult.files.fullshade)){
   if(i==1){
    adult.fullshades<-adult.fullshade
   }else{
-   adult.fullshades<-rbind(adult.fullshade,adult.fullshade)
+   adult.fullshades<-rbind(adult.fullshades,adult.fullshade)
   }
  }
-adult.fullshade<-adult.fullshade[order(adult.fullshade$date_time),] 
+adult.fullshades<-adult.fullshades[order(adult.fullshades$date_time),] 
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,adult.title),ylim=c(10,70))) # plot the data
-  with(adult.fullshade,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  with(adult.fullshades,points(temperature~date_time,type='l',col='red')) # plot the data
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### adult copper model full sun #####################################################################
 
 adult.folders.fullsun<-adult.folders[grep(adult.folders,pattern = "full sun")]
@@ -305,7 +375,7 @@ if(length(adult.folders.fullsun)>1){
 }
 adult.files.fullsun<-list.files(adult.folders.fullsun)
 adult.files.fullsun<-adult.files.fullsun[grep(adult.files.fullsun,pattern = ".txt")]
-adult.files.fullsun<-adult.files.fullsun[grep(adult.files.fullsun,pattern = "C1")]
+adult.files.fullsun<-adult.files.fullsun[grep(adult.files.fullsun,pattern = copper_site)]
 
 # read and plot all data
 
@@ -320,14 +390,15 @@ for(i in 1:length(adult.files.fullsun)){
   if(i==1){
    adult.fullsuns<-adult.fullsun
   }else{
-   adult.fullsuns<-rbind(adult.fullsun,adult.fullsun)
+   adult.fullsuns<-rbind(adult.fullsuns,adult.fullsun)
   }
  }
-adult.fullsun<-adult.fullsun[order(adult.fullsun$date_time),] 
+adult.fullsuns<-adult.fullsuns[order(adult.fullsuns$date_time),] 
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,adult.title),ylim=c(10,70))) # plot the data
-  with(adult.fullsun,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  with(adult.fullsuns,points(temperature~date_time,type='l',col='red')) # plot the data
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### adult copper model part shade #####################################################################
 
 adult.folders.partshade<-adult.folders[grep(adult.folders,pattern = "part shade")]
@@ -336,7 +407,7 @@ if(length(adult.folders.partshade)>1){
 }
 adult.files.partshade<-list.files(adult.folders.partshade)
 adult.files.partshade<-adult.files.partshade[grep(adult.files.partshade,pattern = ".txt")]
-adult.files.partshade<-adult.files.partshade[grep(adult.files.partshade,pattern = "C1")]
+adult.files.partshade<-adult.files.partshade[grep(adult.files.partshade,pattern = copper_site)]
 
 # read and plot all data
 
@@ -351,14 +422,15 @@ for(i in 1:length(adult.files.partshade)){
   if(i==1){
    adult.partshades<-adult.partshade
   }else{
-   adult.partshades<-rbind(adult.partshade,adult.partshade)
+   adult.partshades<-rbind(adult.partshades,adult.partshade)
   }
  }
-adult.partshade<-adult.partshade[order(adult.partshade$date_time),] 
+adult.partshades<-adult.partshades[order(adult.partshades$date_time),] 
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,adult.title),ylim=c(10,70))) # plot the data
-  with(adult.partshade,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  with(adult.partshades,points(temperature~date_time,type='l',col='red')) # plot the data
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### juvenile copper model full shade #####################################################################
 
 juvenile.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Juvenile models/"
@@ -367,7 +439,7 @@ juvenile.folders<-list.dirs(juvenile.folder)[-1]
 juvenile.folders.fullshade<-juvenile.folders[grep(juvenile.folders,pattern = "full shade")]
 juvenile.files.fullshade<-list.files(juvenile.folders.fullshade)
 juvenile.files.fullshade<-juvenile.files.fullshade[grep(juvenile.files.fullshade,pattern = ".txt")]
-juvenile.files.fullshade<-juvenile.files.fullshade[grep(juvenile.files.fullshade,pattern = "C1")]
+juvenile.files.fullshade<-juvenile.files.fullshade[grep(juvenile.files.fullshade,pattern = copper_site)]
 
 # read and plot all data
 
@@ -382,14 +454,15 @@ for(i in 1:length(juvenile.files.fullshade)){
   if(i==1){
    juv.fullshades<-juv.fullshade
   }else{
-   juv.fullshades<-rbind(juv.fullshade,juv.fullshade)
+   juv.fullshades<-rbind(juv.fullshades,juv.fullshade)
   }
  }
-juv.fullshade<-juv.fullshade[order(juv.fullshade$date_time),] 
+juv.fullshades<-juv.fullshades[order(juv.fullshades$date_time),] 
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,juv.title),ylim=c(10,70))) # plot the data
-  with(juv.fullshade,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  with(juv.fullshades,points(temperature~date_time,type='l',col='red')) # plot the data
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### juvenile copper model full sun #####################################################################
 
 juvenile.folders.fullsun<-juvenile.folders[grep(juvenile.folders,pattern = "full sun")]
@@ -398,7 +471,7 @@ if(length(juvenile.folders.fullsun)>1){
 }
 juvenile.files.fullsun<-list.files(juvenile.folders.fullsun)
 juvenile.files.fullsun<-juvenile.files.fullsun[grep(juvenile.files.fullsun,pattern = ".txt")]
-juvenile.files.fullsun<-juvenile.files.fullsun[grep(juvenile.files.fullsun,pattern = "C1")]
+juvenile.files.fullsun<-juvenile.files.fullsun[grep(juvenile.files.fullsun,pattern = copper_site)]
 
 # read and plot all data
 
@@ -413,14 +486,15 @@ for(i in 1:length(juvenile.files.fullsun)){
   if(i==1){
    juv.fullsuns<-juv.fullsun
   }else{
-   juv.fullsuns<-rbind(juv.fullsun,juv.fullsun)
+   juv.fullsuns<-rbind(juv.fullsuns,juv.fullsun)
   }
  }
-juv.fullsun<-juv.fullsun[order(juv.fullsun$date_time),] 
+juv.fullsuns<-juv.fullsuns[order(juv.fullsuns$date_time),] 
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,juv.title),ylim=c(10,70))) # plot the data
-  with(juv.fullsun,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  with(juv.fullsuns,points(temperature~date_time,type='l',col='red')) # plot the data
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### juvenile copper model part shade #####################################################################
 
 juvenile.folders.partshade<-juvenile.folders[grep(juvenile.folders,pattern = "part shade")]
@@ -429,7 +503,7 @@ if(length(juvenile.folders.partshade)>1){
 }
 juvenile.files.partshade<-list.files(juvenile.folders.partshade)
 juvenile.files.partshade<-juvenile.files.partshade[grep(juvenile.files.partshade,pattern = ".txt")]
-juvenile.files.partshade<-juvenile.files.partshade[grep(juvenile.files.partshade,pattern = "C1")]
+juvenile.files.partshade<-juvenile.files.partshade[grep(juvenile.files.partshade,pattern = copper_site)]
 
 # read and plot all data
 
@@ -444,29 +518,38 @@ for(i in 1:length(juvenile.files.partshade)){
   if(i==1){
    juv.partshades<-juv.partshade
   }else{
-   juv.partshades<-rbind(juv.partshade,juv.partshade)
+   juv.partshades<-rbind(juv.partshades,juv.partshade)
   }
  }
-juv.partshade<-juv.partshade[order(juv.partshade$date_time),] 
+juv.partshades<-juv.partshades[order(juv.partshades$date_time),] 
 
   with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,juv.title),ylim=c(10,70))) # plot the data
-  with(juv.partshade,points(temperature~date_time,type='l',col='red')) # plot the data
-
+  with(juv.partshades,points(temperature~date_time,type='l',col='red')) # plot the data
+  points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
+                 
 ################################### weather station #####################################################################
 
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'rainfall'),ylim=c(10,70))) # plot the data
 points(weather_obs$RAIN+10~weather_obs$TIMESTAMP,type='h',col='blue')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'Tair min'),ylim=c(10,70))) # plot the data
 points(weather_obs$AirTemp_C_Min~weather_obs$TIMESTAMP,type='l',col='red')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'Tair max'),ylim=c(10,70))) # plot the data
 points(weather_obs$AirTemp_C_Max~weather_obs$TIMESTAMP,type='l',col='red')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'solar'),ylim=c(10,70))) # plot the data
 points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='red')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'air pressure'),ylim=c(10,70))) # plot the data
 points(weather_obs$Barometer_KPa/2~weather_obs$TIMESTAMP,type='l',col='red')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'relative humditiy'),ylim=c(10,70))) # plot the data
 points(weather_obs$RH_Avg~weather_obs$TIMESTAMP,type='l',col='red')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'evapotranspiration'),ylim=c(10,70))) # plot the data
 points(weather_obs$ETo*100+10~weather_obs$TIMESTAMP,type='l',col='red')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'wind speed'),ylim=c(10,70))) # plot the data
 points(weather_obs$WindSpeed_ms_Avg*5+10~weather_obs$TIMESTAMP,type='l',col='red')
+points(weather_obs$Solar_Avg/50+10~weather_obs$TIMESTAMP,type='l',col='grey')
