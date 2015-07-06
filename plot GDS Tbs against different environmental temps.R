@@ -4,35 +4,21 @@
 library(stringr)
 
 # read in weatherhawk data
-
-weather.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Weather/"
-
-weather_obs<-as.data.frame(read.csv(paste(weather.folder,'CR200Series_data1.dat',sep=''),skip=1,stringsAsFactors=FALSE))
-weather_obs<-weather_obs[-(1:2),]
-weather_obs$TIMESTAMP<-as.POSIXct(weather_obs$TIMESTAMP,format="%Y-%m-%d %H:%M:%S")
-weather_obs<-subset(weather_obs,weather_obs$TIMESTAMP<as.POSIXct("2016-01-01 00:00:00") & weather_obs$TIMESTAMP>as.POSIXct("2013-05-01 00:00:00"))
-weather_obs$AirTemp_C_TMn<-as.POSIXct(weather_obs$AirTemp_C_TMn,format="%Y-%m-%d %H:%M:%S")
-weather_obs$AirTemp_C_TMx<-as.POSIXct(weather_obs$AirTemp_C_TMx,format="%Y-%m-%d %H:%M:%S")
-weather_obs$WindSpeed_ms_TMx<-as.POSIXct(weather_obs$WindSpeed_ms_TMx,format="%Y-%m-%d %H:%M:%S")
-
-weather_obs[,2:10]<-as.numeric(unlist(weather_obs[,2:10]))
-weather_obs[,12]<-as.numeric(unlist(weather_obs[,12]))
-weather_obs[,14:16]<-as.numeric(unlist(weather_obs[,14:16]))
-weather_obs[,18:19]<-as.numeric(unlist(weather_obs[,18:19]))
-rain<-c(0,weather_obs[2:nrow(weather_obs),19]-weather_obs[1:(nrow(weather_obs)-1),19])
-rain[rain<0]<-0
-weather_obs$RAIN<-rain
+tzone<-paste("Etc/GMT-",10,sep="") # doing it this way ignores daylight savings!
+weather_obs<-read.csv('Field Data//weatherhawk_10min.csv')
+weather_obs$TIMESTAMP<-as.POSIXct(weather_obs$TIMESTAMP,format="%Y-%m-%d %H:%M:%S",tz=tzone)
 
 ################################### GDS temperatures #####################################################################
 
 GDS.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/GDS body temps/"
+GDS.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/GDS body temps/"
 
 GDS.files<-list.files(GDS.folder)
 GDS.files<-GDS.files[grep(GDS.files,pattern = ".txt")]
 GDS.files<-GDS.files[-grep(GDS.files,pattern = "backup")] # remove backups
 
 # read and plot all data for first skink
-i<-14
+i<-8
   GDS.data<-read.csv(paste(GDS.folder,GDS.files[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
   colnames(GDS.data)<-c('date_time','temperature') #give the columns names
   GDS.title<-GDS.files[i]
@@ -46,6 +32,7 @@ i<-14
 ################################### burrow temperatures #####################################################################
 
 burrow.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/burrow data/"
+burrow.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/burrow data/"
 burrow.folders<-list.dirs(burrow.folder)[-1]
 
 m<-5 # choose burrow folder
@@ -128,6 +115,7 @@ burrow.deep<-burrow.deep[order(burrow.deep$date_time),]
 ################################### soil temperatures #####################################################################
 
 soil.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Soil Profiles/"
+soil.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Soil profiles/"
 soil.files<-list.files(soil.folder)
 soil.files<-soil.files[grep(soil.files,pattern = ".txt")]
 soil.files<-soil.files[-grep(soil.files,pattern = "backup")] # remove backups
@@ -281,6 +269,7 @@ soil.1ms<-soil.1ms[order(soil.1ms$date_time),]
 ################################### adult copper model full shade #####################################################################
 
 adult.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/adult models/"
+adult.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Adult models/"
 adult.folders<-list.dirs(adult.folder)[-1]
 adult.folders.fullshade<-adult.folders[grep(adult.folders,pattern = "full shade")]
 adult.files.fullshade<-list.files(adult.folders.fullshade)
@@ -373,6 +362,7 @@ adult.partshade<-adult.partshade[order(adult.partshade$date_time),]
 ################################### juvenile copper model full shade #####################################################################
 
 juvenile.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Juvenile models/"
+juvenile.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Juvenile models/"
 juvenile.folders<-list.dirs(juvenile.folder)[-1]
 juvenile.folders.fullshade<-juvenile.folders[grep(juvenile.folders,pattern = "full shade")]
 juvenile.files.fullshade<-list.files(juvenile.folders.fullshade)
