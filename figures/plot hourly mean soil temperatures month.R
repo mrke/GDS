@@ -1,4 +1,5 @@
 ################################### soil temperatures #####################################################################
+library(stringr)
 
 soil.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Soil Profiles/"
 soil.files<-list.files(soil.folder)
@@ -70,7 +71,7 @@ dev.off()
 ################################### soil temp 5cm #####################################################################
 
 
-soil.files.5cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[3])]
+soil.files.5cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[2])]
 
 for(i in 1:length(soil.files.5cm)){
   soil.5cm<-read.csv(paste(soil.folder,soil.files.5cm[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
@@ -173,7 +174,7 @@ dev.off()
 ################################### soil temp 30cm #####################################################################
 
 
-soil.files.30cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[3])]
+soil.files.30cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[4])]
 
 for(i in 1:length(soil.files.30cm)){
   soil.30cm<-read.csv(paste(soil.folder,soil.files.30cm[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
@@ -225,7 +226,7 @@ dev.off()
 ################################### soil temp 50cm #####################################################################
 
 
-soil.files.50cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[4])]
+soil.files.50cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[5])]
 
 for(i in 1:length(soil.files.50cm)){
   soil.50cm<-read.csv(paste(soil.folder,soil.files.50cm[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
@@ -277,7 +278,7 @@ dev.off()
 ################################### soil temp 1m #####################################################################
 
 
-soil.files.1m<-soil.files.subset[grep(soil.files.subset,pattern = depths[5])]
+soil.files.1m<-soil.files.subset[grep(soil.files.subset,pattern = depths[6])]
 
 for(i in 1:length(soil.files.1m)){
   soil.1m<-read.csv(paste(soil.folder,soil.files.1m[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
