@@ -5,23 +5,16 @@ soil.files<-list.files(soil.folder)
 soil.files<-soil.files[grep(soil.files,pattern = ".txt")]
 soil.files<-soil.files[-grep(soil.files,pattern = "backup")] # remove backups
 
-sites<-c("C1","T1","C2","T2","C3","T3")
+sites<-c("C1","C2","C3","C3","T1","T2","T3")
 dates<-c("01-Jan-15","09-Dec-14","10-Dec-14","10-Nov-13","15-May-14","21-Apr-14","22-Apr-14","23-Apr-14")
 depths<-c("_surface","_5cm","_15cm","_30cm","_50cm","_1m")
-
-# note 11-13th Nov 2013 and 20th-24th April 2014 are data logger download events, remove these from the plots
-
-par(mfrow = c(3,2)) # set up for 6 plots in 2 columns
 
 # read in and plot results per depth for a given site and date
 site<-"C2"
 for(k in 1:length(sites)){
 site<-sites[k]
-if(site!="T3"){
 soil.files.subset<-soil.files[grep(soil.files,pattern = site)] # specify site
-}else{
-soil.files.subset<-soil.files[grep(soil.files,pattern = "T3|T2a")] # specify site
-}  
+
 ################################### soil temp surface #####################################################################
 
 soil.files.surface<-soil.files.subset[grep(soil.files.subset,pattern = depths[1])]
@@ -41,16 +34,12 @@ for(i in 1:length(soil.files.surface)){
   }
 }
 soil.surfaces<-soil.surfaces[order(soil.surfaces$date_time),] 
-# get rid of values in November April when loggers were downloaded
-soil.surfaces<-subset(soil.surfaces,as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-10",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2013-11-13",origin="1970-01-01")))
-soil.surfaces<-subset(soil.surfaces,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-04-25",origin="1970-01-01")))
-if(k==5){
-  soil.surfaces<-subset(soil.surfaces,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-05-01",origin="1970-01-01")))
-}
-  with(soil.surfaces,plot(temperature~date_time,type='p',cex=0.1,col='red',ylim=c(-10,70),xlim=c(as.numeric(as.POSIXct("2013-09-01",origin="1970-01-01")),as.numeric(as.POSIXct("2014-10-01",origin="1970-01-01"))),main=site,xlab="",ylab="temperature (deg C)",xaxt = "n")) # plot the data
+
+  with(soil.surfaces,plot(temperature~date_time,type='l',col='red',ylim=c(-10,70),xlim=c(as.numeric(as.POSIXct("2013-08-01",origin="1970-01-01")),as.numeric(as.POSIXct("2014-11-01",origin="1970-01-01"))),main=site,xlab="",ylab="temperature (deg C)",xaxt = "n")) # plot the data
 axis.POSIXct(side = 1, x = soil.surfaces$date_time,
              at = seq(ISOdate(2013,08,011), ISOdate(2014,11,01), "months"), format = "%b %y",
              las = 2)
+
 ################################### soil temp 5cm #####################################################################
 
 soil.files.5cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[2])]
@@ -70,13 +59,8 @@ for(i in 1:length(soil.files.5cm)){
   }
 }
 soil.5cms<-soil.5cms[order(soil.5cms$date_time),] 
-# get rid of values in November April when loggers were downloaded
-soil.5cms<-subset(soil.5cms,as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-10",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2013-11-13",origin="1970-01-01")))
-soil.5cms<-subset(soil.5cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-04-25",origin="1970-01-01")))
-if(k==5){
-  soil.5cms<-subset(soil.5cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-05-01",origin="1970-01-01")))
-}
-  with(soil.5cms,points(temperature~date_time,type='p',cex=0.1,col='orange')) # plot the data
+
+  with(soil.5cms,points(temperature~date_time,type='l',col='orange')) # plot the data
 
 ################################### soil temp 15cm #####################################################################
 
@@ -97,13 +81,8 @@ for(i in 1:length(soil.files.15cm)){
   }
 }
 soil.15cms<-soil.15cms[order(soil.15cms$date_time),] 
-# get rid of values in November April when loggers were downloaded
-soil.15cms<-subset(soil.15cms,as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-10",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2013-11-13",origin="1970-01-01")))
-soil.15cms<-subset(soil.15cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-04-25",origin="1970-01-01")))
-if(k==5){
-  soil.15cms<-subset(soil.15cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-05-01",origin="1970-01-01")))
-}
-  with(soil.15cms,points(temperature~date_time,type='p',cex=0.1,col='brown')) # plot the data
+
+  with(soil.15cms,points(temperature~date_time,type='l',col='brown')) # plot the data
 
 ################################### soil temp 30cm#####################################################################
 
@@ -124,13 +103,8 @@ for(i in 1:length(soil.files.30cm)){
   }
 }
 soil.30cms<-soil.30cms[order(soil.30cms$date_time),] 
-# get rid of values in November April when loggers were downloaded
-soil.30cms<-subset(soil.30cms,as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-10",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2013-11-13",origin="1970-01-01")))
-soil.30cms<-subset(soil.30cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-04-25",origin="1970-01-01")))
-if(k==5){
-  soil.30cms<-subset(soil.30cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-05-01",origin="1970-01-01")))
-}
-  with(soil.30cms,points(temperature~date_time,type='p',cex=0.1,col='light blue')) # plot the data
+
+  with(soil.30cms,points(temperature~date_time,type='l',col='light blue')) # plot the data
 
 ################################### soil temp 50cm#####################################################################
 
@@ -151,13 +125,8 @@ for(i in 1:length(soil.files.50cm)){
   }
 }
 soil.50cms<-soil.50cms[order(soil.50cms$date_time),] 
-# get rid of values in November April when loggers were downloaded
-soil.50cms<-subset(soil.50cms,as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-10",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2013-11-13",origin="1970-01-01")))
-soil.50cms<-subset(soil.50cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-04-25",origin="1970-01-01")))
-if(k==5){
-  soil.50cms<-subset(soil.50cms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-05-01",origin="1970-01-01")))
-}
-  with(soil.50cms,points(temperature~date_time,type='p',cex=0.1,col='blue')) # plot the data
+
+  with(soil.50cms,points(temperature~date_time,type='l',col='blue')) # plot the data
 
 ################################### soil temp 1m#####################################################################
 
@@ -178,14 +147,7 @@ for(i in 1:length(soil.files.1m)){
   }
 }
 soil.1ms<-soil.1ms[order(soil.1ms$date_time),] 
-# get rid of values in November April when loggers were downloaded
-soil.1ms<-subset(soil.1ms,as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-10",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2013-11-13",origin="1970-01-01")))
-soil.1ms<-subset(soil.1ms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-04-25",origin="1970-01-01")))
-if(k==5){
-  soil.1ms<-subset(soil.1ms,as.numeric(date_time)<as.numeric(as.POSIXct("2014-04-20",origin="1970-01-01")) | as.numeric(date_time)>as.numeric(as.POSIXct("2014-05-01",origin="1970-01-01")))
-}
-  with(soil.1ms,points(temperature~date_time,type='p',cex=0.1,col='black')) # plot the data
-  
-grid(NA, NULL) # grid only in y-direction
+
+  with(soil.1ms,points(temperature~date_time,type='l',col='black')) # plot the data
 
 } # end loop through all sites

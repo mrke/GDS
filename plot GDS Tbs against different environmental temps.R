@@ -32,7 +32,7 @@ GDS.files<-GDS.files[grep(GDS.files,pattern = ".txt")]
 GDS.files<-GDS.files[-grep(GDS.files,pattern = "backup")] # remove backups
 
 # read and plot all data for first skink
-i<-14
+i<-1
   GDS.data<-read.csv(paste(GDS.folder,GDS.files[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
   colnames(GDS.data)<-c('date_time','temperature') #give the columns names
   GDS.title<-GDS.files[i]
@@ -480,3 +480,4 @@ with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'evapotra
 points(weather_obs$ETo*100+10~weather_obs$TIMESTAMP,type='l',col='red')
 with(GDS.data,plot(temperature~date_time,type='l',main=paste(GDS.title,'wind speed'),ylim=c(10,70))) # plot the data
 points(weather_obs$WindSpeed_ms_Avg*5+10~weather_obs$TIMESTAMP,type='l',col='red')
+
