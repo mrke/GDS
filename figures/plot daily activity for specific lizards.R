@@ -398,7 +398,8 @@ for(i in 1:length(days)){
 #     points(weather_obs$AirTemp_C_Max~weather_obs$TIMESTAMP,type='l',col='red')
 #      points(weather_obs$RH_Avg~weather_obs$TIMESTAMP,type='l',col='light blue')
 #     points(weather_obs$WindSpeed_ms_Avg*5+y1~weather_obs$TIMESTAMP,type='l',col='red')
-
+grid(NA, NULL) # grid only in y-direction
+abline( v=seq(as.POSIXct(timestart,tz=tzone), as.POSIXct(timefinish,tz=tzone), "hours"), col="gray", lty=3)
   }
 }
 
