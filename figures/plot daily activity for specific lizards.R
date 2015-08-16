@@ -47,9 +47,9 @@ lizard<-8
 
 # time period to plot
 timestart<-"2013-10-23 00:00:00"
-timefinish<-"2013-11-19 00:00:00"
+timefinish<-"2013-12-19 00:00:00"
 
-GDS.data<-subset(GDS.data,as.numeric(date_time)>as.numeric(as.POSIXct(timestart,origin="1970-01-01")) & as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-11",origin="1970-01-01")))
+GDS.data<-subset(GDS.data,as.numeric(date_time)>as.numeric(as.POSIXct(timestart,origin="1970-01-01")) & as.numeric(date_time)<as.numeric(as.POSIXct(timefinish,origin="1970-01-01")))
 
 
 # burrow site to plot
@@ -62,8 +62,8 @@ burrow_site<-5
 # [5] GDS 22 T"   
 # [6] GDS 9"
 
-soil_site<-"C1" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
-copper_site<-"C1" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
+soil_site<-"C2" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
+copper_site<-"C2" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
 
 # read in weatherhawk data
 tzone<-paste("Etc/GMT-",10,sep="") # doing it this way ignores daylight savings!
@@ -378,7 +378,7 @@ for(i in 1:length(days)){
       at = seq(as.POSIXct(timestart,tz=tzone), as.POSIXct(timefinish,tz=tzone), "hours"), format = "%d %b %H",
       las = 2)
   
-    points(weather_obs$Solar_Avg/75+y1~weather_obs$TIMESTAMP,type='h',col='yellow')
+    points(weather_obs$Solar_Avg/75+y1~weather_obs$TIMESTAMP,type='h',col='gold')
     with(sub.GDS.data,points(temperature~date_time,type='l',lwd=2,col='black')) # plot the data
     with(burrow.surf,points(temperature~date_time,type='l',col='red')) # plot the data
     with(burrow.mid,points(temperature~date_time,type='l',col='orange')) # plot the data
@@ -393,10 +393,10 @@ for(i in 1:length(days)){
 #     with(soil.30cm,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data  
 #     with(soil.50cm,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data  
 #     with(soil.1m,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data  
-#     points(weather_obs$RAIN+y1-1~weather_obs$TIMESTAMP,type='h',col='blue')
+      points(weather_obs$RAIN+y1-1~weather_obs$TIMESTAMP,type='h',col='blue')
 #     points(weather_obs$AirTemp_C_Min~weather_obs$TIMESTAMP,type='l',col='blue')
 #     points(weather_obs$AirTemp_C_Max~weather_obs$TIMESTAMP,type='l',col='red')
-#     points(weather_obs$RH_Avg~weather_obs$TIMESTAMP,type='l',col='red')
+#      points(weather_obs$RH_Avg~weather_obs$TIMESTAMP,type='l',col='light blue')
 #     points(weather_obs$WindSpeed_ms_Avg*5+y1~weather_obs$TIMESTAMP,type='l',col='red')
 
   }
