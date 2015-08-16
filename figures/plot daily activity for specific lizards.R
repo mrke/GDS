@@ -1,0 +1,405 @@
+# script to plot GDS Tbs against available temperatures
+
+# load the packages needed for this session
+library(stringr)
+
+GDS.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/GDS body temps/"
+#GDS.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/GDS body temps/"
+
+GDS.files<-list.files(GDS.folder)
+GDS.files<-GDS.files[grep(GDS.files,pattern = ".txt")]
+GDS.files<-GDS.files[-grep(GDS.files,pattern = "backup")] # remove backups
+
+# lizard to do
+lizard<-8
+
+#  [1] "01-Jan-14 1044_data-logger_S_B22.txt"  
+#  [2] "01-Jan-14 1049_data-logger_A_B13.txt"  
+#  [3] "01-Jan-14 1053_data-logger_X_B56.txt"  
+#  [4] "01-Jan-14 1057_datalogger_K_B21.txt"   
+#  [5] "01-Jan-14 1100_data-logger_D_B44.txt"  
+#  [6] "01-Jan-14 1103_datalogger_Q_B46.txt"   
+#  [7] "01-Jan-14 1104_data-logger_B_B40.txt"  
+#  [8] "01-Jan-14 1111_datalogger_B36_woma.txt"
+#  [9] "09-Dec-13 0941_data-logger_I.txt"      
+# [10] "10-Dec-13 1421_data-logger_J.txt"      
+# [11] "10-Dec-13 1424_data-logger_C.txt"      
+# [12] "11-Dec-13 1152_data-logger_P_B32.txt"  
+# [13] "11-Dec-13 1217_data-logger_H B30.txt"  
+# [14] "13-Dec-13 0550_data-logger_Z_B10.txt"  
+# [15] "13-Nov-13 0548_data-logger_Z_B47.txt"  
+# [16] "14-Dec-13 1133_data-loggers_G_B28.txt" 
+# [17] "15-Dec-13 0615_data-logger_M_B41.txt"  
+# [18] "21-Apr-14 1202_B_Backup.txt"           
+# [19] "30-Nov-13 1020_data-logger_L.txt"      
+# [20] "31-Dec-13 1741_data-logger_E_B45.txt"  
+# [21] "31-Dec-13 1744_data-logger_T_B81.txt"
+
+# read skink data
+  GDS.data<-read.csv(paste(GDS.folder,GDS.files[lizard],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(GDS.data)<-c('date_time','temperature') #give the columns names
+  GDS.title<-GDS.files[lizard]
+  GDS.title<-str_replace_all(GDS.title,'.txt','') #get rid of ".txt"
+
+  GDS.data$temperature<-type.convert(sub("\\p{So}C", "", GDS.data$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  GDS.data$date_time<-as.POSIXct(GDS.data$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+
+
+# time period to plot
+timestart<-"2013-10-23 00:00:00"
+timefinish<-"2013-11-19 00:00:00"
+
+GDS.data<-subset(GDS.data,as.numeric(date_time)>as.numeric(as.POSIXct(timestart,origin="1970-01-01")) & as.numeric(date_time)<as.numeric(as.POSIXct("2013-11-11",origin="1970-01-01")))
+
+
+# burrow site to plot
+burrow_site<-5
+
+# [1] DL 3 GDS 15"
+# [2] GDS 13"     
+# [3] GDS 16"     
+# [4] GDS 18"     
+# [5] GDS 22 T"   
+# [6] GDS 9"
+
+soil_site<-"C1" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
+copper_site<-"C1" # choose from "C1","C2","C3","C3_northernest one","T1","T2","T2a","T3"
+
+# read in weatherhawk data
+tzone<-paste("Etc/GMT-",10,sep="") # doing it this way ignores daylight savings!
+weather_obs<-read.csv('Field Data/weatherhawk_10min.csv')
+weather_obs$TIMESTAMP<-as.POSIXct(weather_obs$TIMESTAMP,format="%Y-%m-%d %H:%M:%S",tz=tzone)
+
+################################### burrow temperatures #####################################################################
+
+burrow.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/burrow data/"
+#burrow.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/burrow data/"
+burrow.folders<-list.dirs(burrow.folder)[-1]
+
+#m<-5 # choose burrow folder
+burrow.files<-list.files(burrow.folders[burrow_site])
+burrow.files<-burrow.files[grep(burrow.files,pattern = ".txt")]
+burrow.files<-burrow.files[-grep(burrow.files,pattern = "backup")] # remove backups
+
+################################### burrow surface #####################################################################
+
+burrow.files.surf<-burrow.files[grep(burrow.files,pattern = "surf")] # get surface files
+
+# read in all burrow surface data
+for(j in 1:length(burrow.files.surf)){
+  burrow.data.surf<-read.csv(paste(burrow.folders[burrow_site],"/",burrow.files.surf[j],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(burrow.data.surf)<-c('date_time','temperature',"humidity") #give the columns names
+  burrow.title<-burrow.files.surf[j]
+  burrow.title<-str_replace_all(burrow.title,'.txt','') #get rid of ".txt"
+
+  burrow.data.surf$temperature<-type.convert(sub("\\p{So}C", "", burrow.data.surf$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  burrow.data.surf$date_time<-as.POSIXct(burrow.data.surf$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(j==1){
+  burrow.surf<-burrow.data.surf
+  }else{
+  burrow.surf<-rbind(burrow.surf,burrow.data.surf)
+  }
+}
+burrow.surf<-burrow.surf[order(burrow.surf$date_time),] 
+
+################################### burrow mid #####################################################################
+
+burrow.files.mid<-burrow.files[grep(burrow.files,pattern = "mid")] # get mid files
+
+# read in all burrow mid data
+for(j in 1:length(burrow.files.mid)){
+  burrow.data.mid<-read.csv(paste(burrow.folders[burrow_site],"/",burrow.files.mid[j],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(burrow.data.mid)<-c('date_time','temperature',"humidity") #give the columns names
+  burrow.title<-burrow.files.mid[j]
+  burrow.title<-str_replace_all(burrow.title,'.txt','') #get rid of ".txt"
+
+  burrow.data.mid$temperature<-type.convert(sub("\\p{So}C", "", burrow.data.mid$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  burrow.data.mid$date_time<-as.POSIXct(burrow.data.mid$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(j==1){
+  burrow.mid<-burrow.data.mid
+  }else{
+  burrow.mid<-rbind(burrow.mid,burrow.data.mid)
+  }
+}
+burrow.mid<-burrow.mid[order(burrow.mid$date_time),] 
+
+################################### burrow deep #####################################################################
+
+burrow.files.deep<-burrow.files[grep(burrow.files,pattern = "deep")] # get deep files
+
+# read in all burrow deep data
+for(j in 1:length(burrow.files.deep)){
+  burrow.data.deep<-read.csv(paste(burrow.folders[burrow_site],"/",burrow.files.deep[j],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(burrow.data.deep)<-c('date_time','temperature',"hudeepity") #give the columns names
+  burrow.title<-burrow.files.deep[j]
+  burrow.title<-str_replace_all(burrow.title,'.txt','') #get rid of ".txt"
+
+  burrow.data.deep$temperature<-type.convert(sub("\\p{So}C", "", burrow.data.deep$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  burrow.data.deep$date_time<-as.POSIXct(burrow.data.deep$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(j==1){
+  burrow.deep<-burrow.data.deep
+  }else{
+  burrow.deep<-rbind(burrow.deep,burrow.data.deep)
+  }
+}
+burrow.deep<-burrow.deep[order(burrow.deep$date_time),] 
+
+################################### soil temperatures #####################################################################
+
+soil.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Soil Profiles/"
+#soil.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Soil profiles/"
+soil.files<-list.files(soil.folder)
+soil.files<-soil.files[grep(soil.files,pattern = ".txt")]
+soil.files<-soil.files[-grep(soil.files,pattern = "backup")] # remove backups
+
+sites<-c("C1","C2","C3","C3_northernest one","T1","T2","T2a","T3")
+dates<-c("01-Jan-15","09-Dec-14","10-Dec-14","10-Nov-13","15-May-14","21-Apr-14","22-Apr-14","23-Apr-14")
+depths<-c("_surface","_5cm","_15cm","_30cm","_50cm","_1m")
+
+# read in and plot results per depth for a given site and date
+
+soil.files.subset<-soil.files[grep(soil.files,pattern = soil_site)] # specify site
+
+################################### soil temp surface #####################################################################
+
+soil.files.surface<-soil.files.subset[grep(soil.files.subset,pattern = depths[1])]
+
+for(i in 1:length(soil.files.surface)){
+  soil.surface<-read.csv(paste(soil.folder,soil.files.surface[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(soil.surface)<-c('date_time','temperature') #give the columns names
+  soil.title<-soil.files.surface[i]
+  soil.title<-str_replace_all(soil.title,'.txt','') #get rid of ".txt"
+
+  soil.surface$temperature<-type.convert(sub("\\p{So}C", "", soil.surface$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  soil.surface$date_time<-as.POSIXct(soil.surface$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+  soil.surfaces<-soil.surface
+  }else{
+  soil.surfaces<-rbind(soil.surfaces,soil.surface)
+  }
+}
+soil.surfaces<-soil.surfaces[order(soil.surfaces$date_time),] 
+                 
+################################### soil temp 5cm #####################################################################
+
+soil.files.5cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[2])]
+
+for(i in 1:length(soil.files.5cm)){
+  soil.5cm<-read.csv(paste(soil.folder,soil.files.5cm[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(soil.5cm)<-c('date_time','temperature') #give the columns names
+  soil.title<-soil.files.5cm[i]
+  soil.title<-str_replace_all(soil.title,'.txt','') #get rid of ".txt"
+
+  soil.5cm$temperature<-type.convert(sub("\\p{So}C", "", soil.5cm$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  soil.5cm$date_time<-as.POSIXct(soil.5cm$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+  soil.5cms<-soil.5cm
+  }else{
+  soil.5cms<-rbind(soil.5cms,soil.5cm)
+  }
+}
+soil.5cms<-soil.5cms[order(soil.5cms$date_time),] 
+                 
+################################### soil temp 15cm #####################################################################
+
+soil.files.15cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[3])]
+
+for(i in 1:length(soil.files.15cm)){
+  soil.15cm<-read.csv(paste(soil.folder,soil.files.15cm[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(soil.15cm)<-c('date_time','temperature') #give the columns names
+  soil.title<-soil.files.15cm[i]
+  soil.title<-str_replace_all(soil.title,'.txt','') #get rid of ".txt"
+
+  soil.15cm$temperature<-type.convert(sub("\\p{So}C", "", soil.15cm$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  soil.15cm$date_time<-as.POSIXct(soil.15cm$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+  soil.15cms<-soil.15cm
+  }else{
+  soil.15cms<-rbind(soil.15cms,soil.15cm)
+  }
+}
+soil.15cms<-soil.15cms[order(soil.15cms$date_time),] 
+
+################################### soil temp 30cm#####################################################################
+
+soil.files.30cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[4])]
+
+for(i in 1:length(soil.files.30cm)){
+  soil.30cm<-read.csv(paste(soil.folder,soil.files.30cm[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(soil.30cm)<-c('date_time','temperature') #give the columns names
+  soil.title<-soil.files.30cm[i]
+  soil.title<-str_replace_all(soil.title,'.txt','') #get rid of ".txt"
+
+  soil.30cm$temperature<-type.convert(sub("\\p{So}C", "", soil.30cm$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  soil.30cm$date_time<-as.POSIXct(soil.30cm$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+  soil.30cms<-soil.30cm
+  }else{
+  soil.30cms<-rbind(soil.30cms,soil.30cm)
+  }
+}
+soil.30cms<-soil.30cms[order(soil.30cms$date_time),] 
+
+################################### soil temp 50cm#####################################################################
+
+soil.files.50cm<-soil.files.subset[grep(soil.files.subset,pattern = depths[5])]
+
+for(i in 1:length(soil.files.50cm)){
+  soil.50cm<-read.csv(paste(soil.folder,soil.files.50cm[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(soil.50cm)<-c('date_time','temperature') #give the columns names
+  soil.title<-soil.files.50cm[i]
+  soil.title<-str_replace_all(soil.title,'.txt','') #get rid of ".txt"
+
+  soil.50cm$temperature<-type.convert(sub("\\p{So}C", "", soil.50cm$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  soil.50cm$date_time<-as.POSIXct(soil.50cm$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+  soil.50cms<-soil.50cm
+  }else{
+  soil.50cms<-rbind(soil.50cms,soil.50cm)
+  }
+}
+soil.50cms<-soil.50cms[order(soil.50cms$date_time),] 
+
+################################### soil temp 1m#####################################################################
+
+soil.files.1m<-soil.files.subset[grep(soil.files.subset,pattern = depths[6])]
+
+for(i in 1:length(soil.files.1m)){
+  soil.1m<-read.csv(paste(soil.folder,soil.files.1m[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(soil.1m)<-c('date_time','temperature') #give the columns names
+  soil.title<-soil.files.1m[i]
+  soil.title<-str_replace_all(soil.title,'.txt','') #get rid of ".txt"
+
+  soil.1m$temperature<-type.convert(sub("\\p{So}C", "", soil.1m$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  soil.1m$date_time<-as.POSIXct(soil.1m$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+  soil.1ms<-soil.1m
+  }else{
+  soil.1ms<-rbind(soil.1ms,soil.1m)
+  }
+}
+soil.1ms<-soil.1ms[order(soil.1ms$date_time),] 
+
+################################### adult copper model full shade #####################################################################
+
+adult.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/adult models/"
+#adult.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Adult models/"
+adult.folders<-list.dirs(adult.folder)[-1]
+adult.folders.fullshade<-adult.folders[grep(adult.folders,pattern = "full shade")]
+adult.files.fullshade<-list.files(adult.folders.fullshade)
+adult.files.fullshade<-adult.files.fullshade[grep(adult.files.fullshade,pattern = ".txt")]
+adult.files.fullshade<-adult.files.fullshade[grep(adult.files.fullshade,pattern = copper_site)]
+
+# read and plot all data
+
+for(i in 1:length(adult.files.fullshade)){
+  adult.fullshade<-read.csv(paste(adult.folders.fullshade,"/",adult.files.fullshade[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(adult.fullshade)<-c('date_time','temperature') #give the columns names
+  adult.title<-adult.files.fullshade[i]
+  adult.title<-str_replace_all(adult.title,'.txt','') #get rid of ".txt"
+
+  adult.fullshade$temperature<-type.convert(sub("\\p{So}C", "", adult.fullshade$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  adult.fullshade$date_time<-as.POSIXct(adult.fullshade$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+   adult.fullshades<-adult.fullshade
+  }else{
+   adult.fullshades<-rbind(adult.fullshades,adult.fullshade)
+  }
+ }
+adult.fullshades<-adult.fullshades[order(adult.fullshades$date_time),] 
+
+  
+################################### adult copper model full sun #####################################################################
+
+adult.folders.fullsun<-adult.folders[grep(adult.folders,pattern = "full sun")]
+if(length(adult.folders.fullsun)>1){
+  adult.folders.fullsun<-adult.folders.fullsun[1]
+}
+adult.files.fullsun<-list.files(adult.folders.fullsun)
+adult.files.fullsun<-adult.files.fullsun[grep(adult.files.fullsun,pattern = ".txt")]
+adult.files.fullsun<-adult.files.fullsun[grep(adult.files.fullsun,pattern = copper_site)]
+
+# read and plot all data
+
+for(i in 1:length(adult.files.fullsun)){
+  adult.fullsun<-read.csv(paste(adult.folders.fullsun,"/",adult.files.fullsun[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(adult.fullsun)<-c('date_time','temperature') #give the columns names
+  adult.title<-adult.files.fullsun[i]
+  adult.title<-str_replace_all(adult.title,'.txt','') #get rid of ".txt"
+
+  adult.fullsun$temperature<-type.convert(sub("\\p{So}C", "", adult.fullsun$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  adult.fullsun$date_time<-as.POSIXct(adult.fullsun$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+   adult.fullsuns<-adult.fullsun
+  }else{
+   adult.fullsuns<-rbind(adult.fullsuns,adult.fullsun)
+  }
+ }
+adult.fullsuns<-adult.fullsuns[order(adult.fullsuns$date_time),] 
+             
+################################### adult copper model part shade #####################################################################
+
+adult.folders.partshade<-adult.folders[grep(adult.folders,pattern = "part shade")]
+if(length(adult.folders.partshade)>1){
+  adult.folders.partshade<-adult.folders.partshade[1]
+}
+adult.files.partshade<-list.files(adult.folders.partshade)
+adult.files.partshade<-adult.files.partshade[grep(adult.files.partshade,pattern = ".txt")]
+adult.files.partshade<-adult.files.partshade[grep(adult.files.partshade,pattern = copper_site)]
+
+# read and plot all data
+
+for(i in 1:length(adult.files.partshade)){
+  adult.partshade<-read.csv(paste(adult.folders.partshade,"/",adult.files.partshade[i],sep=""),head=FALSE,skip=2,stringsAsFactors=FALSE) #read the file, skip the first two lines and specify that there isn't a header
+  colnames(adult.partshade)<-c('date_time','temperature') #give the columns names
+  adult.title<-adult.files.partshade[i]
+  adult.title<-str_replace_all(adult.title,'.txt','') #get rid of ".txt"
+
+  adult.partshade$temperature<-type.convert(sub("\\p{So}C", "", adult.partshade$temperature, perl = TRUE)) # trick to get rid of degree C symbol
+  adult.partshade$date_time<-as.POSIXct(adult.partshade$date_time,tz="Etc/GMT-10",format="%d/%m/%Y %H:%M:%S") # format date colum
+  if(i==1){
+   adult.partshades<-adult.partshade
+  }else{
+   adult.partshades<-rbind(adult.partshades,adult.partshade)
+  }
+ }
+adult.partshades<-adult.partshades[order(adult.partshades$date_time),] 
+
+################################### plot lizard data against obs #####################################################################
+
+days<-seq(as.POSIXct(timestart,tz=tzone), as.POSIXct(timefinish,tz=tzone), "days")
+y1<-15 # y axis lower limit
+y2<-50 # y axis upper limit
+for(i in 1:length(days)){
+  sub.GDS.data<-subset(GDS.data,as.Date(GDS.data$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+  if(nrow(sub.GDS.data)>0){
+    with(sub.GDS.data,plot(temperature~date_time,type='l',lwd=2,col='black',ylim=c(y1,y2),main=GDS.title,xlab="",ylab="temperature (deg C)",xaxt = "n")) # plot the data
+    axis.POSIXct(side = 1, x = GDS.data$date_time,
+      at = seq(as.POSIXct(timestart,tz=tzone), as.POSIXct(timefinish,tz=tzone), "hours"), format = "%d %b %H",
+      las = 2)
+  
+    points(weather_obs$Solar_Avg/75+y1~weather_obs$TIMESTAMP,type='h',col='yellow')
+    with(sub.GDS.data,points(temperature~date_time,type='l',lwd=2,col='black')) # plot the data
+    with(burrow.surf,points(temperature~date_time,type='l',col='red')) # plot the data
+    with(burrow.mid,points(temperature~date_time,type='l',col='orange')) # plot the data
+    with(burrow.deep,points(temperature~date_time,type='l',col='blue')) # plot the data
+
+    with(adult.partshades,points(temperature~date_time,type='l',lty=2,col='orange')) # plot the data
+    with(adult.fullsuns,points(temperature~date_time,type='l',lty=2,col='red')) # plot the data
+    with(adult.fullshades,points(temperature~date_time,type='l',lty=2,col='blue')) # plot the data
+#     with(soil.surfaces,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data
+#     with(soil.5cms,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data
+#     with(soil.15cm,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data  
+#     with(soil.30cm,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data  
+#     with(soil.50cm,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data  
+#     with(soil.1m,points(temperature~date_time,type='l',lty=1,col='dark grey')) # plot the data  
+#     points(weather_obs$RAIN+y1-1~weather_obs$TIMESTAMP,type='h',col='blue')
+#     points(weather_obs$AirTemp_C_Min~weather_obs$TIMESTAMP,type='l',col='blue')
+#     points(weather_obs$AirTemp_C_Max~weather_obs$TIMESTAMP,type='l',col='red')
+#     points(weather_obs$RH_Avg~weather_obs$TIMESTAMP,type='l',col='red')
+#     points(weather_obs$WindSpeed_ms_Avg*5+y1~weather_obs$TIMESTAMP,type='l',col='red')
+
+  }
+}
+
+
