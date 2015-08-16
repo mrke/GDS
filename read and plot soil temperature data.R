@@ -3,7 +3,8 @@
 # load the packages needed for this session
 library(stringr)
 
-soil.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Soil Profiles/"
+#soil.folder<-"c:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Soil Profiles/"
+soil.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Soil profiles/"
 soil.files<-list.files(soil.folder)
 soil.files<-soil.files[grep(soil.files,pattern = ".txt")]
 soil.files<-soil.files[-grep(soil.files,pattern = "backup")] # remove backups
