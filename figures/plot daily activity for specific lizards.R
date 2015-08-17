@@ -367,12 +367,63 @@ adult.partshades<-adult.partshades[order(adult.partshades$date_time),]
 
 ################################### plot lizard data against obs #####################################################################
 
+roundhalfhour <- function( x ) { # function that rounds time to the nearest half hour
+ as.POSIXct(round(as.numeric(x)/(60*30))*60*30,origin="1970-01-01")
+} 
+
 days<-seq(as.POSIXct(timestart,tz=tzone), as.POSIXct(timefinish,tz=tzone), "days")
 y1<-15 # y axis lower limit
 y2<-50 # y axis upper limit
+m<-0
 for(i in 1:length(days)){
   sub.GDS.data<-subset(GDS.data,as.Date(GDS.data$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
   if(nrow(sub.GDS.data)>0){
+    m<-m+1
+    sub.weather<-subset(weather_obs,as.Date(weather_obs$TIMESTAMP,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.burrow.deep<-subset(burrow.deep,as.Date(burrow.deep$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.burrow.surf<-subset(burrow.surf,as.Date(burrow.surf$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.burrow.mid<-subset(burrow.mid,as.Date(burrow.mid$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.soil.surface<-subset(soil.surfaces,as.Date(soil.surfaces$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.soil.5cm<-subset(soil.5cms,as.Date(soil.5cms$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.soil.15cm<-subset(soil.15cms,as.Date(soil.15cms$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.soil.30cm<-subset(soil.30cms,as.Date(soil.30cms$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.soil.50cm<-subset(soil.50cms,as.Date(soil.50cms$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.soil.1m<-subset(soil.1ms,as.Date(soil.1ms$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.adult.partshade<-subset(adult.partshades,as.Date(adult.partshades$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.adult.fullshade<-subset(adult.fullshades,as.Date(adult.fullshades$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+    sub.adult.fullsun<-subset(adult.fullsuns,as.Date(adult.fullsuns$date_time,format="%Y-%m-%d",tz=tzone)==as.Date(days[i],tz=tzone))
+
+    
+    h.GDS<-aggregate(sub.GDS.data$temperature,by=list(format(roundhalfhour(sub.GDS.data$date_time), "%H:%M")), FUN=mean)
+    h.solar<-aggregate(sub.weather$Solar_Avg,by=list(format(roundhalfhour(sub.weather$TIMESTAMP), "%H:%M")), FUN=mean)
+    h.burrow.deep<-aggregate(sub.burrow.deep$temperature,by=list(format(roundhalfhour(sub.burrow.deep$date_time), "%H:%M")), FUN=mean)
+    h.burrow.surf<-aggregate(sub.burrow.surf$temperature,by=list(format(roundhalfhour(sub.burrow.surf$date_time), "%H:%M")), FUN=mean)
+    h.burrow.mid<-aggregate(sub.burrow.mid$temperature,by=list(format(roundhalfhour(sub.burrow.mid$date_time), "%H:%M")), FUN=mean)
+    h.soil.surface<-aggregate(sub.soil.surface$temperature,by=list(format(roundhalfhour(sub.soil.surface$date_time), "%H:%M")), FUN=mean)
+    h.soil.5cm<-aggregate(sub.soil.5cm$temperature,by=list(format(roundhalfhour(sub.soil.5cm$date_time), "%H:%M")), FUN=mean)
+    h.soil.15cm<-aggregate(sub.soil.15cm$temperature,by=list(format(roundhalfhour(sub.soil.15cm$date_time), "%H:%M")), FUN=mean)
+    h.soil.30cm<-aggregate(sub.soil.30cm$temperature,by=list(format(roundhalfhour(sub.soil.30cm$date_time), "%H:%M")), FUN=mean)
+    h.soil.50cm<-aggregate(sub.soil.50cm$temperature,by=list(format(roundhalfhour(sub.soil.50cm$date_time), "%H:%M")), FUN=mean)
+    h.soil.1m<-aggregate(sub.soil.1m$temperature,by=list(format(roundhalfhour(sub.soil.1m$date_time), "%H:%M")), FUN=mean)
+    h.adult.partshade<-aggregate(sub.adult.partshade$temperature,by=list(format(roundhalfhour(sub.adult.partshade$date_time), "%H:%M")), FUN=mean)
+    h.adult.fullshade<-aggregate(sub.adult.fullshade$temperature,by=list(format(roundhalfhour(sub.adult.fullshade$date_time), "%H:%M")), FUN=mean)
+    h.adult.fullsun<-aggregate(sub.adult.fullsun$temperature,by=list(format(roundhalfhour(sub.adult.fullsun$date_time), "%H:%M")), FUN=mean)
+    h.data<-as.data.frame(cbind(seq(0,23.5,0.5),h.solar[,2],h.GDS[,2],h.burrow.surf[,2],h.burrow.mid[,2],h.burrow.deep[,2],h.soil.surface[,2],h.soil.5cm[,2],h.soil.15cm[,2],h.soil.30cm[,2],h.soil.50cm[,2],h.soil.1m[,2],h.adult.fullsun[,2],h.adult.partshade[,2],h.adult.fullshade[,2]))
+    
+    colnames(h.data)<-c("hour","solar","Tb","b.surf","b.mid","b.deep","s.1cm","s.5cm","s.15cm","s.30cm","s.50cm","s.1m","c.sun","c.part","c.shd")
+    mins<-abs(as.data.frame(h.data[,3]-h.data[,c(4:6,13:15)])) # just burrow
+    #mins<-abs(as.data.frame(h.data[,3]-h.data[,7:15])) # just soil
+    #mins<-abs(as.data.frame(h.data[,3]-h.data[,4:15])) # burrow plus soil
+
+    location<-names(mins)[apply( mins, 1, which.min)]
+    h.data$loc<-location
+    
+    if(m==1){
+      h.data.all<-cbind(days[i],h.data)
+    }else{
+      h.data.all<-rbind(h.data.all,cbind(days[i],h.data))
+    }
+    
     with(sub.GDS.data,plot(temperature~date_time,type='l',lwd=2,col='black',ylim=c(y1,y2),main=GDS.title,xlab="",ylab="temperature (deg C)",xaxt = "n")) # plot the data
     axis.POSIXct(side = 1, x = GDS.data$date_time,
       at = seq(as.POSIXct(timestart,tz=tzone), as.POSIXct(timefinish,tz=tzone), "hours"), format = "%d %b %H",
@@ -398,9 +449,10 @@ for(i in 1:length(days)){
 #     points(weather_obs$AirTemp_C_Max~weather_obs$TIMESTAMP,type='l',col='red')
 #      points(weather_obs$RH_Avg~weather_obs$TIMESTAMP,type='l',col='light blue')
 #     points(weather_obs$WindSpeed_ms_Avg*5+y1~weather_obs$TIMESTAMP,type='l',col='red')
-grid(NA, NULL) # grid only in y-direction
-abline( v=seq(as.POSIXct(timestart,tz=tzone), as.POSIXct(timefinish,tz=tzone), "hours"), col="gray", lty=3)
+grid(NA, NULL) # grid only in x-direction
+abline( v=seq(as.POSIXct(days[i],tz=tzone), as.POSIXct(days[i]+3600*23+3600,tz=tzone), 3600/2), col="gray", lty=3)
+text(seq(as.POSIXct(days[i],tz=tzone), as.POSIXct(days[i]+3600*23+3600,tz=tzone), 3600/2)+3600/4, 45, h.data$loc,srt=90)
   }
 }
-
+write.csv(h.data.all,paste(GDS.title,"_timebudget.csv",sep=""))
 
