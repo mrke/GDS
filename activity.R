@@ -404,7 +404,7 @@ for(i in 1:length(days)){
     h.solar<-aggregate(sub.weather$Solar_Avg,by=list(format(roundhalfhour(sub.weather$TIMESTAMP), "%H:%M")), FUN=mean)
     h.solar2<-aggregate(sub.solar$solar,by=list(format(roundhalfhour(sub.solar$dates), "%H:%M")), FUN=mean)
     h.solar2[48,1]<-h.solar[48,1]
-    h.solar2<-rbind(h.solar2,c(h.solar[49,1],0))
+    h.solar2<-rbind(h.solar2,c("23:59",0))
     h.GDS<-rbind(c(h.solar[1,1],h.GDS[1,2]),h.GDS)
     h.GDS$x<-as.numeric(h.GDS$x)
     h.burrow.surf<-aggregate(sub.burrow.surf[,1:2],by=list(format(roundhalfhour(sub.burrow.surf$date_time), "%H:%M")), FUN=mean)
