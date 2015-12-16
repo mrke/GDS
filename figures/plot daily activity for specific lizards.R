@@ -6,10 +6,16 @@ lizard<-3
 timestart<-"2013-10-22 00:00:00"
 timefinish<-"2013-11-19 00:00:00"
 
+"C:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike"
 GDS.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/GDS body temps/"
 burrow.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/burrow data/"
 soil.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Soil profiles/"
 adult.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers data/Adult models/"
+
+#GDS.folder<-"C:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/GDS body temps/"
+#burrow.folder<-"C:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/burrow data/"
+#soil.folder<-"C:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Soil profiles/"
+#adult.folder<-"C:/NicheMapR_Working/projects/GDS/Danae's datalogger data for Mike/Adult models/"
 
 #  [1] "01-Jan-14 1044_data-logger_S_B22.txt " female S - 23/10 to 11/11 female  
 #  [2] "01-Jan-14 1049_data-logger_A_B13.txt"  female A – 10/10 to 9/11 Female
@@ -32,20 +38,21 @@ adult.folder<-"C:/Users/Danaes Documents/aUNI/Research Masters/Data/dataloggers 
 # [19] "30-Nov-13 1020_data-logger_L.txt" male 17/10 to 26/11     
 # [20] "31-Dec-13 1741_data-logger_E_B45.txt" female  •  10/10 to 2/11
 # [21] "31-Dec-13 1744_data-logger_T_B81.txt" pregant female, 26/10 to 17/12
+tzone<-paste("Etc/GMT-10",sep="") # doing it this way ignores daylight savings!
 timestarts<-c("2013-10-23 00:00:00","2013-10-10 00:00:00","2013-10-22 00:00:00","2013-10-10 00:00:00","2013-10-14 00:00:00","2013-10-14 00:00:00","2013-10-10 00:00:00","2013-10-23 00:00:00","2013-10-09 00:00:00","2013-10-23 00:00:00","2013-10-10 00:00:00","2013-10-14 00:00:00","2013-10-25 00:00:00","2013-10-14 00:00:00","2013-10-19 00:00:00","2013-10-10 00:00:00","2013-10-14 00:00:00","2013-10-10 00:00:00","2013-10-17 00:00:00","2013-10-10 00:00:00","2013-10-26 00:00:00")
 timefinishs<-c("2013-11-11 00:00:00","2013-11-09 00:00:00","2013-11-19 00:00:00","2013-10-17 00:00:00","2013-10-19 00:00:00","2013-10-27 00:00:00","2013-11-06 00:00:00","2013-11-18 00:00:00","2013-11-07 00:00:00","2013-11-09 00:00:00","2013-11-07 00:00:00","2013-11-19 00:00:00","2013-11-16 00:00:00","2013-10-22 00:00:00","2013-11-11 00:00:00","2013-11-06 00:00:00","2013-10-18 00:00:00","2013-11-06 00:00:00","2013-11-26 00:00:00","2013-11-02 00:00:00","2013-12-17 00:00:00")
 sex<-c('f','f','m','f','f','f','f','f','f','f','f','f','f','m','f','f','f','f','m','f','f')
 gravid<-c('np','np','np','np','np','np','np','np','np','p','p','p','p','np','np','np','p','np','np','np','p')
 animals<-c('S','A','X','K','D','Q','B','B36','I','J','C','P','H','Z-B10','Z','G','M','B_backup','L','E','T')
-for(lizard in 1:21){
-source('activity.R')
-timestart<-timestarts[lizard]
-timefinish<-timefinishs[lizard]
-GDS.title<-activity(lizard,timestart,timefinish,GDS.folder,burrow.folder,soil.folder,adult.folder)
-}
+# for(lizard in 1:21){
+# source('activity.R')
+# timestart<-timestarts[lizard]
+# timefinish<-timefinishs[lizard]
+# GDS.title<-activity(lizard,timestart,timefinish,GDS.folder,burrow.folder,soil.folder,adult.folder)
+# }
 ################ read corrected data and assign states ##################
 
-timebudget.files<-list.files('time budget/')
+timebudget.files<-list.files('time budgets/')
 timebudget.files<-timebudget.files[grep(timebudget.files,pattern = "timebudget_corrected.csv")]
 
 # read in new, corrected time budget
@@ -56,7 +63,7 @@ aboveground<-c("c.sun","c.part","c.shd")
 entrance<-c("s.5cm","b.surf")
 
 for(k in 1:length(timebudget.files)){
-time_budget<-read.csv(paste("time budget/",timebudget.files[k],sep=""))[,-1]
+time_budget<-read.csv(paste("time budgets/",timebudget.files[k],sep=""))[,-1]
 
 time_budget$transit<-0
 time_budget$state<-"inact.burrow"
@@ -121,17 +128,17 @@ summary(aov(Tb ~ sexgrav + Error(animalID), data=subset(time_budget,(sex=='m' | 
 summary(aov(Tb ~ sexgrav + Error(animalID), data=subset(time_budget,(sex=='m' | gravid=='p'))))
 
 # summarise mean Tb per individual and redo simple ANOVA
-agg_Tbs<-as.data.frame(aggregate(time_budget$Tb,by=list(time_budget$animalID),FUN=mean))
+
+agg_Tbs<-as.data.frame(aggregate(time_budget$Tb,by=list(time_budget$animalID),FUN=median, na.rm=TRUE))
 colnames(agg_Tbs)<-c("animals","Tb")
 states<-cbind(animals,sex,gravid)
 states<-states[order(animals),]
-states<-subset(states,animals!='B_backup' & animals != 'B36' & animals != 'L')
+states<-subset(states,animals!='B_backup' & animals != 'B36' & animals != 'E' & animals != 'L' & animals != 'T')
 agg_Tbs<-cbind(agg_Tbs,states[,2:3])
 agg_Tbs$sexgrav<-paste(agg_Tbs$sex,agg_Tbs$gravid,sep="") # make a new column of repro and sex together
 summary(aov(Tb ~ sexgrav,data=agg_Tbs))
+summary(aov(Tb ~ gravid,data=agg_Tbs))
 
-time_budget<-subset(time_budget,animalID=='L')
-test_tb<-all_time_budgets
 time_budget_gravid<-subset(all_time_budgets,gravid=='p')
 time_budget_nongravid<-subset(all_time_budgets,gravid=='np' | sex=='f')
 time_budget_males<-subset(all_time_budgets,sex=='m')
@@ -142,7 +149,7 @@ time_budget<-all_time_budgets
 brks<-seq(0,80,0.5)
 tpref_upper<-35
 tpref_lower<-34
-hist(x=time_budget$Tb,breaks=brks,,col='NA',border="NA",main="all data",ylim=c(0,3000))
+hist(x=time_budget$Tb,breaks=brks,col='NA',border="NA",main="all data",ylim=c(0,3000))
 hist(x=time_budget$c.shd,breaks=brks,col='black',border="NA",add=TRUE)
 hist(x=time_budget$c.sun,breaks=brks,col='black',border="NA",add=TRUE)
 hist(x=time_budget$c.part,breaks=brks,col='black',border="NA",add=TRUE)
@@ -226,7 +233,7 @@ points(s.15cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.30cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.50cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.1m~hour,data=time_budget,cex=0.5,pch=16,col='grey')
-points(Tb~hour,data=subset(time_budget,sexgrav=='fnp'),col='pink',cex=0.5)
+points(Tb~hour,data=subset(time_budget,sex=='f', gravid='np'),col='pink',cex=0.5)
 abline(tpref_lower,0,col='orange',lty=2,lwd=2)
 abline(tpref_upper,0,col='orange',lty=2,lwd=2)
 
@@ -238,7 +245,7 @@ points(s.15cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.30cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.50cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.1m~hour,data=time_budget,cex=0.5,pch=16,col='grey')
-points(Tb~hour,data=subset(time_budget,sexgrav=='mnp'),col='blue',cex=0.5)
+points(Tb~hour,data=subset(time_budget,sex=='m', gravid='np'),col='blue',cex=0.5)
 abline(tpref_lower,0,col='orange',lty=2,lwd=2)
 abline(tpref_upper,0,col='orange',lty=2,lwd=2)
 
@@ -250,7 +257,7 @@ points(s.15cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.30cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.50cm~hour,data=time_budget,cex=0.5,pch=16,col='grey')
 points(s.1m~hour,data=time_budget,cex=0.5,pch=16,col='grey')
-points(Tb~hour,data=subset(time_budget,sexgrav=='fp'),col='red',cex=0.5)
+points(Tb~hour,data=subset(time_budget,sex=='f', gravid='p'),col='red',cex=0.5)
 abline(tpref_lower,0,col='orange',lty=2,lwd=2)
 abline(tpref_upper,0,col='orange',lty=2,lwd=2)
 
