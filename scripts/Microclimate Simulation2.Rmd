@@ -1,0 +1,345 @@
+---
+title: "Simulation of soil temperature, vapour pressure and humidity at Newhaven"
+author: "Michael Kearney"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Simulation of soil temperature and lizard activity at Kinchega NP}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+ eval = TRUE, tidy.opts=list(width.cutoff=60), tidy=TRUE  
+)
+```
+
+## Overview
+
+This document compares observed and predicted soil temperature, vapour pressure and relative humidity to that measured by Danae Moore and Joe Schofield at Newhaven for the Great Desert Skink Project.
+
+```{r}
+library(NicheMapR)
+library(dplyr)
+```
+
+## Run the model with daily gridded data for Australia
+
+Run the model using historical daily gridded data for Australia from 2013 to 2014.
+
+First set up some soil properties for the site.
+
+```{r}
+#source("c:/git/micro_australia/get.soil.R")
+ystart <- 2013# start year
+yfinish <- 2014# end year
+nyears<-yfinish-ystart+1# integer, number of years for which to run the microclimate model
+loc <- c(131.183806, -22.797235)
+longlat <- rbind(loc)
+```
+
+Now set the soil properties. First retrieve soil properties from Soil and Landscape Grid of Australia (SLGA)
+
+```{r, eval=FALSE}
+prevdir<-getwd()
+setwd('x:')
+cmd<-paste("R --no-save --args ",longlat[1]," ",longlat[2]," < extract.R",sep='')
+system(cmd)
+soilpro<-read.csv('data.csv')
+setwd(prevdir)
+soilpro[,1]<-c(2.5,7.5,22.5,45,80,150)
+colnames(soilpro)[1] <- 'depth'
+```
+
+Now get hydraulic properties for this soil using Cosby et al. 1984 pedotransfer functinos.
+
+```{r, eval=FALSE}
+DEP <- c(0., 1.,  3, 5.,  10,  15,  30.,  60.,  100.,  200.) # Soil nodes (cm)
+soil.hydro<-pedotransfer(soilpro = as.data.frame(soilpro), DEP = DEP)
+PE<-soil.hydro$PE
+BB<-soil.hydro$BB
+BD<-soil.hydro$BD
+KS<-soil.hydro$KS
+BD[1:9]<-BD[1:9]#*1.7 # make top 15 cm more dense
+BulkDensity <- BD[seq(1,19,2)]*1000 #soil bulk density, kg/m3
+```
+
+Get qualitative soil type out of interest.
+
+```{r, eval=FALSE}
+# search through observed textures and find the nearest match to Campell and Norman's Table 9.1
+stypes<-NULL
+for(m in 1:nrow(soilpro)){
+ ssq<-(CampNormTbl9_1[,2]-soilpro[m,4]/100)^2 + (CampNormTbl9_1[,3]-soilpro[m,3]/100)^2
+ stypes[m]<-which(ssq==min(ssq))
+}
+
+# produce a table of the qualitative soil profile
+soils<-as.character(CampNormTbl9_1[,1])
+profile<-as.data.frame(cbind(soilpro[,1],soils[stypes]), stringsAsFactors=FALSE)
+profile[,1]<-as.numeric(profile[,1])
+colnames(profile)<-c("depth","soiltype")
+library(knitr)
+kable(profile)
+``` 
+
+Get LAI
+```{r, eval=FALSE}
+library(raster)
+monthly_LAI <- stack("W:/monthlyLAI.nc")
+lonlat<-as.data.frame(longlat)
+monthly_LAI <- crop(monthly_LAI, extent(lonlat[1,1]-0.1, lonlat[1,1]+0.1, lonlat[1,2]-0.1, lonlat[1,2]+0.1))
+LAI_month<-extract(monthly_LAI, cbind(longlat[1],longlat[2]))
+juldays12 <- c(15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349)
+LAI <- suppressWarnings(spline(juldays12, LAI_month, n = 365, xmin = 1, xmax = 365, method = "periodic"))$y
+LAI <- rep(LAI, nyears)
+```
+
+Now run the microclimate model and get the output.
+
+```{r, eval=FALSE}
+micro<-micro_aust(loc = loc, maxshade = 70, ystart = ystart, yfinish = yfinish, PE = PE, BB = BB, BD = BD, KS = KS, BulkDensity = BulkDensity, spatial = "w:/", windfac = 1, LAI = LAI, cap = 0, TIMAXS = c(3, 1, 0, 0))
+save(micro, file = "micro.Rda")
+```
+
+Estimate burrow humidity as average vapour pressure between near-surface and soil
+
+```{r}
+load("micro.Rda")
+
+sat<-WETAIR(db = micro$soil[,3:12])$esat # saturated soil vapour pressure
+vpres_soil<-sat*micro$humid[,3:12]
+e<-WETAIR(db = micro$metout[,3], rh = micro$metout[,5])$e # ambient vapour pressure
+satmean <- vpres_soil
+weights <- seq(0, .9,.1)
+satmean <- t(apply(cbind(e,e,e,e,e,e,e,e,e,e), 1, function(x)x*(1-weights))) + t(apply(vpres_soil, 1, function(x)x*weights))
+#satmean <- (e * 0.5 + vpres_soil * 0.5)  # mean of ambient and saturated vapour pressure
+newRH<-satmean/sat
+newRH[newRH>1]<-1
+micro$humid[,3:12]<-newRH#micro$metout[,5]/100 # assume ambient humidity down to 30cm
+sat<-WETAIR(db = micro$shadsoil[,3:12])$esat # saturated soil vapour pressure
+e<-WETAIR(db = micro$shadmet[,3], rh = micro$shadmet[,5])$e # ambient vapour pressure
+satmean <- vpres_soil
+satmean <- t(apply(cbind(e,e,e,e,e,e,e,e,e,e), 1, function(x)x*(1-weights))) + t(apply(vpres_soil, 1, function(x)x*weights))#satmean <- (e * 0.5 + vpres_soil * 0.5)  # mean of ambient and saturated vapour pressure
+newRH<-satmean/sat
+newRH[newRH>1]<-1
+micro$shadhumid[,3:12]<-newRH#micro$metout[,5]/100 # assume ambient humidity down to 30cm
+```
+
+Next, append dates
+
+```{r}
+tzone=paste("Etc/GMT-",10,sep="") # doing it this way ignores daylight savings!
+dates=seq(ISOdate(ystart,1,1,tz=tzone)-3600*12, ISOdate((ystart+nyears),1,1,tz=tzone)-3600*13, by="hours")
+dates=subset(dates, format(dates, "%m/%d")!= "02/29") # remove leap years
+dates2=seq(ISOdate(ystart,1,1,tz=tzone)-3600*12, ISOdate((ystart+nyears),1,1,tz=tzone)-3600*13, by="days") 
+dates2=subset(dates2, format(dates2, "%m/%d")!= "02/29") # remove leap years
+
+metout <- as.data.frame(cbind(dates,as.data.frame(micro$metout))) # above ground microclimatic conditions, min shade
+shadmet <- as.data.frame(cbind(dates,as.data.frame(micro$shadmet)))
+soil <- as.data.frame(cbind(dates,as.data.frame(micro$soil))) # soil temperatures, minimum shade
+shadsoil <- as.data.frame(cbind(dates,as.data.frame(micro$shadsoil))) # soil temperatures, maximum shade
+humid <- as.data.frame(cbind(dates,as.data.frame(micro$humid))) # soil temperatures, minimum shade
+shadhumid <- as.data.frame(cbind(dates,as.data.frame(micro$shadhumid))) # soil temperatures, maximum shade
+```
+
+
+##compare with measurements
+
+```{r}
+
+############################# read in weather data ###################################################
+weather_obs = read.csv("csv summaries/weather_obs.csv", stringsAsFactors = FALSE)[,-1]
+weather_obs$TIMESTAMP = as.POSIXct(weather_obs$TIMESTAMP, format = "%Y-%m-%d %H:%M:%S")
+
+############################# read in copper model data and format dates ###################################################
+
+# read in data
+obs.surfaces=read.csv("csv summaries/all.soil.surfaces.csv",stringsAsFactors = FALSE)[,-1]
+obs.5cms=read.csv("csv summaries/all.soil.5cms.csv",stringsAsFactors = FALSE)[,-1]
+obs.15cms=read.csv("csv summaries/all.soil.15cms.csv",stringsAsFactors = FALSE)[,-1]
+obs.30cms=read.csv("csv summaries/all.soil.30cms.csv",stringsAsFactors = FALSE)[,-1]
+obs.50cms=read.csv("csv summaries/all.soil.50cms.csv",stringsAsFactors = FALSE)[,-1]
+obs.1ms=read.csv("csv summaries/all.soil.1ms.csv",stringsAsFactors = FALSE)[,-1]
+
+obs.burrow.surf=read.csv("csv summaries/all.burrow.surf.csv",stringsAsFactors = FALSE)[,-1]
+obs.burrow.mid=read.csv("csv summaries/all.burrow.mid.csv",stringsAsFactors = FALSE)[,-1]
+obs.burrow.deep=read.csv("csv summaries/all.burrow.deep.csv",stringsAsFactors = FALSE)[,-1]
+
+source('addTrans.R') # function for making transparent plots
+source('polylims.R') # function for creating 
+# read in data
+mean.max.surf=read.csv("csv summaries/mean.max.surf.csv",stringsAsFactors = FALSE)[,-1]
+mean.max.mid=read.csv("csv summaries/mean.max.mid.csv",stringsAsFactors = FALSE)[,-1]
+mean.max.deep=read.csv("csv summaries/mean.max.deep.csv",stringsAsFactors = FALSE)[,-1]
+
+mean.min.surf=read.csv("csv summaries/mean.min.surf.csv",stringsAsFactors = FALSE)[,-1]
+mean.min.mid=read.csv("csv summaries/mean.min.mid.csv",stringsAsFactors = FALSE)[,-1]
+mean.min.deep=read.csv("csv summaries/mean.min.deep.csv",stringsAsFactors = FALSE)[,-1]
+
+# format dates
+mean.max.surf$date = as.POSIXct(mean.max.surf$date, format = "%Y-%m-%d")
+mean.max.mid$date = as.POSIXct(mean.max.mid$date, format = "%Y-%m-%d")
+mean.max.deep$date = as.POSIXct(mean.max.deep$date, format = "%Y-%m-%d")
+
+mean.min.surf$date = as.POSIXct(mean.min.surf$date, format = "%Y-%m-%d")
+mean.min.mid$date = as.POSIXct(mean.min.mid$date, format = "%Y-%m-%d")
+mean.min.deep$date = as.POSIXct(mean.min.deep$date, format = "%Y-%m-%d")
+
+# create polygons for weather surf humidity
+ts <- seq.POSIXt(as.POSIXlt(min(mean.max.surf$date)), as.POSIXlt(max(mean.max.surf$date)), by="day")
+ts <- format.POSIXct(ts,'%Y-%m-%d')
+mean.max.surf$merge <- format.POSIXct(mean.max.surf$date,'%Y-%m-%d')
+df <- data.frame(merge=ts)
+mean.max.surf2 <- full_join(df,mean.max.surf)
+mean.max.surf2$merge <- as.POSIXct(mean.max.surf2$merge, format = "%Y-%m-%d")
+
+ts <- seq.POSIXt(as.POSIXlt(min(mean.min.surf$date)), as.POSIXlt(max(mean.min.surf$date)), by="day")
+ts <- format.POSIXct(ts,'%Y-%m-%d')
+mean.min.surf$merge <- format.POSIXct(mean.min.surf$date,'%Y-%m-%d')
+df <- data.frame(merge=ts)
+mean.min.surf2 <- full_join(df,mean.min.surf)
+mean.min.surf2$merge <- as.POSIXct(mean.min.surf2$merge, format = "%Y-%m-%d")
+
+# create polygons for weather mid humidity
+ts <- seq.POSIXt(as.POSIXlt(min(mean.max.mid$date)), as.POSIXlt(max(mean.max.mid$date)), by="day")
+ts <- format.POSIXct(ts,'%Y-%m-%d')
+mean.max.mid$merge <- format.POSIXct(mean.max.mid$date,'%Y-%m-%d')
+df <- data.frame(merge=ts)
+mean.max.mid2 <- full_join(df,mean.max.mid)
+mean.max.mid2$merge <- as.POSIXct(mean.max.mid2$merge, format = "%Y-%m-%d")
+
+ts <- seq.POSIXt(as.POSIXlt(min(mean.min.mid$date)), as.POSIXlt(max(mean.min.mid$date)), by="day")
+ts <- format.POSIXct(ts,'%Y-%m-%d')
+mean.min.mid$merge <- format.POSIXct(mean.min.mid$date,'%Y-%m-%d')
+df <- data.frame(merge=ts)
+mean.min.mid2 <- full_join(df,mean.min.mid)
+mean.min.mid2$merge <- as.POSIXct(mean.min.mid2$merge, format = "%Y-%m-%d")
+
+# create polygons for weather deep humidity
+ts <- seq.POSIXt(as.POSIXlt(min(mean.max.deep$date)), as.POSIXlt(max(mean.max.deep$date)), by="day")
+ts <- format.POSIXct(ts,'%Y-%m-%d')
+mean.max.deep$merge <- format.POSIXct(mean.max.deep$date,'%Y-%m-%d')
+df <- data.frame(merge=ts)
+mean.max.deep2 <- full_join(df,mean.max.deep)
+mean.max.deep2$merge <- as.POSIXct(mean.max.deep2$merge, format = "%Y-%m-%d")
+
+ts <- seq.POSIXt(as.POSIXlt(min(mean.min.deep$date)), as.POSIXlt(max(mean.min.deep$date)), by="day")
+ts <- format.POSIXct(ts,'%Y-%m-%d')
+mean.min.deep$merge <- format.POSIXct(mean.min.deep$date,'%Y-%m-%d')
+df <- data.frame(merge=ts)
+mean.min.deep2 <- full_join(df,mean.min.deep)
+mean.min.deep2$merge <- as.POSIXct(mean.min.deep2$merge, format = "%Y-%m-%d")
+
+xlims <- c(as.POSIXct("2013-10-01 00:00:00", format = "%Y-%m-%d %H:%M:%S"), as.POSIXct("2014-09-30 00:00:00", format = "%Y-%m-%d %H:%M:%S"))
+
+par(mfrow = c(2,1))
+par(mar = c(1,1,1,1) + 0.1) # margin spacing stuff 
+par(mar = c(4,4,1,4) + 0.1) # margin spacing stuff
+plot(metout$dates, metout$TAREF, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(1.2), ' m', ' air temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(weather_obs$TIMESTAMP, format = "%Y-%m-%d %H:%M:%S"), weather_obs$AirTemp_C_Avg,col=addTrans("red",150))
+
+plot(metout$dates, metout$VREF, type = 'l', xlim = xlims, ylim = c(0,10), ylab = "1.2 m wind speed (m/s)", xlab ='date')
+lines(as.POSIXct(weather_obs$TIMESTAMP, format = "%Y-%m-%d %H:%M:%S"), weather_obs$WindSpeed_ms_Avg,col=addTrans("red",150))
+
+plot(metout$dates, metout$RH, type = 'l', xlim = xlims, ylim = c(0,100), ylab = "1.2 m relative humidity (%)", xlab ='date')
+lines(as.POSIXct(weather_obs$TIMESTAMP, format = "%Y-%m-%d %H:%M:%S"), weather_obs$RH_Avg,col=addTrans("red",150))
+
+plot(metout$dates, metout$SOLR, type = 'l', xlim = xlims, ylim = c(0,1300), ylab = "solar radiation (w / m2)", xlab ='date')
+lines(as.POSIXct(weather_obs$TIMESTAMP, format = "%Y-%m-%d %H:%M:%S"), weather_obs$Solar_Avg,col=addTrans("red",150))
+
+par(mfrow = c(3,1))
+par(mar = c(1,1,1,1) + 0.1) # margin spacing stuff 
+par(mar = c(4,4,1,4) + 0.1) # margin spacing stuff
+
+plot(soil$dates, soil$D0cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(0), ' cm', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(obs.surfaces$date_time, format = "%Y-%m-%d %H:%M:%S"), obs.surfaces$temperature,col=addTrans("red",150))
+
+plot(soil$dates, soil$D5cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(5), ' cm', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(obs.5cms$date_time, format = "%Y-%m-%d %H:%M:%S"), obs.5cms$temperature,col=addTrans("red",150))
+
+plot(soil$dates, soil$D15cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(15), ' cm', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(obs.15cms$date_time, format = "%Y-%m-%d %H:%M:%S"), obs.15cms$temperature,col=addTrans("red",150))
+
+plot(soil$dates, soil$D30cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(5), ' cm', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(obs.30cms$date_time, format = "%Y-%m-%d %H:%M:%S"), obs.30cms$temperature,col=addTrans("red",150))
+
+plot(soil$dates, soil$D50cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(50), ' cm', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(obs.50cms$date_time, format = "%Y-%m-%d %H:%M:%S"), obs.50cms$temperature,col=addTrans("red",150))
+
+plot(soil$dates, soil$D100cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(1), ' m', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(obs.1ms$date_time, format = "%Y-%m-%d %H:%M:%S"), obs.1ms$temperature,col=addTrans("red",150))
+
+par(mfrow = c(3,1))
+par(mar = c(1,1,1,1) + 0.1) # margin spacing stuff 
+par(mar = c(4,4,1,4) + 0.1) # margin spacing stuff
+
+sitestodo <- unique(obs.burrow.deep$site)
+
+for(i in 1:length(sitestodo)){
+  
+plot.obs.burrow.surf <- subset(obs.burrow.surf, site == sitestodo[i])
+plot.obs.burrow.mid <- subset(obs.burrow.mid, site == sitestodo[i])
+plot.obs.burrow.deep <- subset(obs.burrow.deep, site == sitestodo[i])
+
+plot(soil$dates, soil$D5cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(5), ' cm', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(plot.obs.burrow.surf$date_time, format = "%Y-%m-%d %H:%M:%S"), plot.obs.burrow.surf$temperature,col=addTrans("red",150))
+
+plot(soil$dates, soil$D30cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(30), ' cm', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(plot.obs.burrow.mid$date_time, format = "%Y-%m-%d %H:%M:%S"), plot.obs.burrow.mid$temperature,col=addTrans("red",150))
+
+plot(soil$dates, soil$D100cm, type = 'l', xlim = xlims, ylim = c(-10,70), ylab = bquote(paste(.(1), ' m', ' temperature (', ~degree~C,')')), xlab ='date')
+lines(as.POSIXct(plot.obs.burrow.deep$date_time, format = "%Y-%m-%d %H:%M:%S"), plot.obs.burrow.deep$temperature,col=addTrans("red",150))
+}
+
+par(mfrow = c(3,1))
+par(mar = c(1,1,1,1) + 0.1) # margin spacing stuff 
+par(mar = c(4,4,1,4) + 0.1) # margin spacing stuff
+
+
+plot(humid$dates, humid$RH5cm*100, type = 'l', xlim = xlims, ylim = c(0,100), ylab = "burrow humidity shallow, %", xlab ='date')
+# add the polygons
+polys = polylims(mean.max.surf2$merge, mean.min.surf2$mean.min.humidity, mean.max.surf2$mean.max.humidity)
+for(i in 1:length(polys)){
+	polygon(polys[[i]]$x, polys[[i]]$y,col=addTrans("red",150), border = NA)
+}
+
+plot(humid$dates, humid$RH30cm*100, type = 'l', xlim = xlims, ylim = c(0,100), ylab = "burrow humidity mid, %", xlab ='date')
+# add the polygons
+polys = polylims(mean.max.mid2$merge, mean.min.mid2$mean.min.humidity, mean.max.mid2$mean.max.humidity)
+for(i in 1:length(polys)){
+	polygon(polys[[i]]$x, polys[[i]]$y, col=addTrans("red",150), border = NA)
+}
+
+plot(humid$dates, humid$RH100cm*100, type = 'l', xlim = xlims, ylim = c(0,100), ylab = "burrow humidity deep, %", xlab ='date')
+# add the polygons
+polys = polylims(mean.max.deep2$merge, mean.min.deep2$mean.min.humidity, mean.max.deep2$mean.max.humidity)
+for(i in 1:length(polys)){
+	polygon(polys[[i]]$x, polys[[i]]$y,col=addTrans("red",150), border = NA)
+}
+
+
+sitestodo <- unique(obs.burrow.deep$site)
+
+for(i in 1:length(sitestodo)){
+  
+plot.obs.burrow.surf <- subset(obs.burrow.surf, site == sitestodo[i])
+plot.obs.burrow.mid <- subset(obs.burrow.mid, site == sitestodo[i])
+plot.obs.burrow.deep <- subset(obs.burrow.deep, site == sitestodo[i])
+
+plot(humid$dates, humid$RH5cm*100, type = 'l', xlim = xlims, ylim = c(0,100), ylab = "burrow humidity shallow, %", xlab ='date')
+lines(as.POSIXct(plot.obs.burrow.surf$date_time, format = "%Y-%m-%d %H:%M:%S"), plot.obs.burrow.surf$humidity,col=addTrans("red",150))
+
+
+plot(humid$dates, humid$RH30cm*100, type = 'l', xlim = xlims, ylim = c(0,100), ylab = "burrow humidity mid, %", xlab ='date')
+lines(as.POSIXct(plot.obs.burrow.mid$date_time, format = "%Y-%m-%d %H:%M:%S"), plot.obs.burrow.mid$humidity,col=addTrans("red",150))
+
+
+plot(humid$dates, humid$RH100cm*100, type = 'l', xlim = xlims, ylim = c(0,100), ylab = "burrow humidity deep, %", xlab ='date')
+lines(as.POSIXct(plot.obs.burrow.deep$date_time, format = "%Y-%m-%d %H:%M:%S"), plot.obs.burrow.deep$humidity,col=addTrans("red",150))
+
+}
+```
